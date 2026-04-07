@@ -40,9 +40,27 @@ def generate_blog_post(topic):
     """
     
     try:
-        # 모델의 버전에 종속되지 않도록 가장 빠르고 안정적인 구글 공용 별칭(Alias)을 사용합니다.
+        target_model = 'gemini-2.5-flash'  # 기본 Fallback
+        try:
+            # 1. API에 접속하여 현재 계정이 사용 가능한(할당량이 있거나 존재하는) 모델 목록을 직접 불러옵니다.
+            available_flash_models = []
+            for m in client.models.list():
+                # 보통 m.name은 'models/gemini-버전-flash' 형태로 반환됩니다.
+                name = m.name.replace('models/', '')
+                if 'flash' in name and 'vision' not in name:
+                    available_flash_models.append(name)
+            
+            if available_flash_models:
+                # 찾아낸 flash 계열 모델 중 가장 첫 번째(또는 안정 버전)를 선택합니다.
+                target_model = available_flash_models[-1] if len(available_flash_models) > 1 else available_flash_models[0]
+        except Exception as e:
+            print(f"모델 목록 조회 중 오류(무시가능): {e}")
+
+        print(f"🚀 자동 탐지로 선택된 최종 AI 모델: {target_model}")
+
+        # 선택된 모델로 글 작성 요청 수행
         response = client.models.generate_content(
-            model='gemini-flash',
+            model=target_model,
             contents=prompt,
         )
         return response.text
