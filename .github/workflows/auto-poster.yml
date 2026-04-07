@@ -1,0 +1,47 @@
+name: Auto Blog Poster
+
+on:
+  schedule:
+    # 매일 UTC 자정(KST 오전 9시) 실행
+    - cron: '0 0 * * *'
+  # 터미널이나 GitHub 화면에서 수동으로도 돌릴 수 있게
+  workflow_dispatch: 
+
+jobs:
+  build-and-draft:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install Dependencies
+        run: |
+          cd bot
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: Run Auto Poster Bot
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          cd bot
+          python main.py
+          
+      - name: Create Pull Request for Review
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "[Auto] 새 블로그 포스트 초안 작성"
+          title: "🚀 새로운 블로그 포스트 초안이 작성되었습니다"
+          body: |
+            ## 자동화 시스템 알림
+            새로운 블로그 글이 AI를 통해 생성되었습니다.
+            이 PR 안에 포함된 Markdown 파일을 확인하시고, 내용이 마음에 드시면 `Merge pull request` 버튼을 눌러 승인해주세요.
+            승인되면 자동으로 글이 발행됩니다!
+          branch: "auto-post-draft"
+          labels: "draft, auto-generated"
