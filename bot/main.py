@@ -40,9 +40,9 @@ def generate_blog_post(topic):
     """
     
     try:
-        # 모델을 2.5-pro에서 1.5-flash로 변경 (무료 티어 넉넉함)
+        # 모델의 버전에 종속되지 않도록 가장 빠르고 안정적인 구글 공용 별칭(Alias)을 사용합니다.
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-flash',
             contents=prompt,
         )
         return response.text
