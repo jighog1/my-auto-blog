@@ -84,7 +84,6 @@ def save_post(topic, content):
 title: "{topic}"
 description: "{topic}에 관한 자동 생성된 포스트입니다."
 pubDate: "{now.strftime('%b %d %Y')}"
-heroImage: "/blog-placeholder-about.jpg"
 ---
 
 """
