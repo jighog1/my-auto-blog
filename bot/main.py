@@ -40,8 +40,9 @@ def generate_blog_post(topic):
     """
     
     try:
+        # 모델을 2.5-pro에서 1.5-flash로 변경 (무료 티어 넉넉함)
         response = client.models.generate_content(
-            model='gemini-2.5-pro',
+            model='gemini-1.5-flash',
             contents=prompt,
         )
         return response.text
