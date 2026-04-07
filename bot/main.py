@@ -42,21 +42,26 @@ def generate_blog_post(topic):
     try:
         target_model = 'gemini-2.5-flash'  # 기본 Fallback
         try:
-            # 1. API에 접속하여 현재 계정이 사용 가능한(할당량이 있거나 존재하는) 모델 목록을 직접 불러옵니다.
-            available_flash_models = []
-            for m in client.models.list():
-                # 보통 m.name은 'models/gemini-버전-flash' 형태로 반환됩니다.
-                name = m.name.replace('models/', '')
-                if 'flash' in name and 'vision' not in name:
-                    available_flash_models.append(name)
+            # 1. API에 접속하여 현재 계정이 사용 가능한 모델 리스트 조회
+            available_models = [m.name.replace('models/', '') for m in client.models.list()]
             
-            if available_flash_models:
-                # 찾아낸 flash 계열 모델 중 가장 첫 번째(또는 안정 버전)를 선택합니다.
-                target_model = available_flash_models[-1] if len(available_flash_models) > 1 else available_flash_models[0]
+            # 2. 가장 안정적이고 속도가 빠른 '정식 릴리즈된 Flash 모델' 우선 순위 목록 (preview, exp 제외)
+            whitelist = [
+                'gemini-3.0-flash', 
+                'gemini-2.5-flash', 
+                'gemini-2.0-flash', 
+                'gemini-1.5-flash'
+            ]
+            
+            # 3. 화이트리스트 중 내 계정(available_models)에서 사용할 수 있는 가장 최신 버전을 선택
+            for w_model in whitelist:
+                if w_model in available_models:
+                    target_model = w_model
+                    break
         except Exception as e:
             print(f"모델 목록 조회 중 오류(무시가능): {e}")
 
-        print(f"🚀 자동 탐지로 선택된 최종 AI 모델: {target_model}")
+        print(f"🚀 안정성 확인 후 최종 선택된 생성 AI 모델: {target_model}")
 
         # 선택된 모델로 글 작성 요청 수행
         response = client.models.generate_content(
