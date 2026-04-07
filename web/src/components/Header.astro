@@ -5,10 +5,10 @@ import HeaderLink from './HeaderLink.astro';
 
 <header>
 	<nav>
-		<h2><a href="/my-auto-blog/">{SITE_TITLE}</a></h2>
+		<h2><a href={import.meta.env.BASE_URL}>{SITE_TITLE}</a></h2>
 		<div class="internal-links">
-			<HeaderLink href="/my-auto-blog/">Home</HeaderLink>
-			<HeaderLink href="/my-auto-blog/about">About</HeaderLink>
+			<HeaderLink href={import.meta.env.BASE_URL}>Home</HeaderLink>
+			<HeaderLink href={`${import.meta.env.BASE_URL}about`}>About</HeaderLink>
 		</div>
 		<div class="social-links">
 			<a href="https://m.webtoo.ls/@astro" target="_blank">
