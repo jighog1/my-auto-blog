@@ -63,3 +63,12 @@
 .card-hover {
   @apply transition-all duration-300 hover:shadow-2xl hover:shadow-black/10 dark:hover:shadow-black/40 hover:border-accent/50;
 }
+
+/* Premium Mermaid Styling */
+.mermaid {
+  @apply flex justify-center my-10 p-6 rounded-2xl bg-muted/20 border border-border/50 shadow-inner overflow-x-auto;
+}
+.mermaid svg {
+  @apply max-w-full h-auto transition-transform duration-300 hover:scale-[1.02];
+}
+

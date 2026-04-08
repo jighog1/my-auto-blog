@@ -200,7 +200,8 @@ def save_post(title, image_keyword, content):
     slug = f"auto-post-{now.strftime('%Y%m%d%H%M%S')}"
     
     # 이미지 키워드 URL 인코딩 (공백 및 특수문자 처리)
-    encoded_keyword = urllib.parse.quote(image_keyword) if image_keyword else "technology"
+    # quote_plus를 사용하여 공백을 +로 변환 (더 표준적인 URL 방식)
+    encoded_keyword = urllib.parse.quote_plus(image_keyword) if image_keyword else "technology"
     
     # LoremFlickr 검색 리다이렉트 활용
     image_url = f"https://loremflickr.com/1200/630/{encoded_keyword}"

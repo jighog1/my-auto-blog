@@ -173,14 +173,33 @@ const structuredData = {
     <!-- Load full theme logic -->
     <script src="../scripts/theme.ts"></script>
     
-    <!-- Mermaid.js Support -->
+    <!-- Mermaid.js Support with Premium Styling -->
     <script is:inline type="module">
       import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-      mermaid.initialize({ startOnLoad: true, theme: 'default' });
       
-      // Astro View Transitions 대응: 페이지 전환 시마다 Mermaid 재렌더링
+      const theme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "base";
+      const config = {
+        startOnLoad: true,
+        theme: theme,
+        themeVariables: {
+          fontFamily: 'var(--font-app)',
+          primaryColor: 'var(--accent)',
+          primaryTextColor: '#fff',
+          primaryBorderColor: 'var(--accent)',
+          lineColor: 'var(--border)',
+          secondaryColor: 'var(--muted)',
+          tertiaryColor: 'var(--background)'
+        },
+        securityLevel: 'loose'
+      };
+
+      mermaid.initialize(config);
+      
+      // Astro View Transitions 대응: 페이지 전환 시마다 Mermaid 재렌더링 및 테마 동기화
       document.addEventListener('astro:after-swap', () => {
-        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        const newTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "base";
+        config.theme = newTheme;
+        mermaid.initialize(config);
         mermaid.run();
       });
     </script>
