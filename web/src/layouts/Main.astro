@@ -9,7 +9,7 @@ type Props = (StringTitle | ArrayTitle) & { pageDesc?: string };
 
 const { props } = Astro;
 
-const backUrl = SITE.showBackButton ? Astro.url.pathname : "/";
+const backUrl = SITE.showBackButton ? Astro.url.pathname : import.meta.env.BASE_URL;
 ---
 
 <Breadcrumb />
