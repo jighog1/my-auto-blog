@@ -10,6 +10,9 @@ on:
 jobs:
   build-and-draft:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,6 +34,9 @@ jobs:
         run: |
           cd bot
           python main.py
+          
+      - name: Check for changes
+        run: git status
           
       - name: Create Pull Request for Review
         uses: peter-evans/create-pull-request@v5
