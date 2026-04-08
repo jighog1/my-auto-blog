@@ -3,6 +3,7 @@ import random
 import datetime
 import urllib.request
 import xml.etree.ElementTree as ET
+import re
 from google import genai
 
 # 환경 변수 및 설정
@@ -49,7 +50,33 @@ def get_daily_topic_v2():
     
     # 첫 번째 뉴스 제목을 기반으로 주제를 생성하거나 뉴스 리스트 자체를 반환
     main_news = news_list[0].split(" - ")[0] # 언론사 이름 제거 시도
-    return category, main_news, news_list
+    return category, news_list
+
+def get_recent_posts_info(count=3):
+    """최근 작성된 포스트들의 제목을 가져와 중복을 피하기 위한 정보로 활용합니다."""
+    titles = []
+    try:
+        if not os.path.exists(BLOG_DIR):
+            return []
+            
+        files = [f for f in os.listdir(BLOG_DIR) if f.endswith('.md')]
+        # 파일명 기반 역순 정렬 (auto-post-YYYYMMDD...)
+        files.sort(reverse=True)
+        
+        for filename in files[:count]:
+            with open(os.path.join(BLOG_DIR, filename), 'r', encoding='utf-8') as f:
+                content = f.read()
+                # 간단한 정규식으로 title 추출
+                match = re.search(r'title:\s*"(.*?)"', content)
+                if match:
+                    titles.append(match.group(1))
+        
+        if titles:
+            print(f"📂 최근 포스팅 이력 확인됨: {titles}")
+        return titles
+    except Exception as e:
+        print(f"⚠️ 최근 포스팅 이력 조회 중 오류: {e}")
+        return []
 
 def get_best_model_list(client):
     """사용자님의 API 키로 접근 가능한 모델 중 가장 좋은 'Flash' 및 'Pro' 모델을 순서대로 찾아옵니다."""
@@ -75,7 +102,7 @@ def get_best_model_list(client):
         print(f"⚠️ 모델 목록 조회 중 오류 발생 (기본값 사용): {e}")
         return ["gemini-2.0-flash", "gemini-1.5-flash"]
 
-def generate_blog_post_v2(category, news_list):
+def generate_blog_post_v2(category, news_list, recent_titles=None):
     """수집된 여러 뉴스 정보를 종합하여 독창적인 제목과 본문을 작성합니다."""
     if not GEMINI_API_KEY:
         print("GEMINI_API_KEY 환경 변수가 없습니다. 작업 중단.")
@@ -87,22 +114,50 @@ def generate_blog_post_v2(category, news_list):
     model_candidates = get_best_model_list(client)
     
     news_context = "\n".join([f"- {n}" for n in news_list])
+    history_context = "\n".join([f"- {t}" for t in recent_titles]) if recent_titles else "없음"
     
     prompt = f"""
     당신은 "{category}" 분야의 전문 콘텐츠 에디터이자 전략적 블로거입니다. 
     제시된 여러 최신 뉴스 정보를 바탕으로 독자들에게 강력한 통찰을 제공하는 '오리지널' 블로그 포스트를 작성하세요.
 
+    [최근 포스팅된 주제들 (중복 피하기용)]
+    {history_context}
+
     [참고할 최신 뉴스 소스들]
     {news_context}
 
     [필수 작성 및 구성 가이드라인]
+    0. 중복 방지:
+       - **위에 나열된 '최근 포스팅된 주제들'과 중복되거나 너무 유사한 내용은 피하십시오.**
+       - 동일한 카테고리 내에서도 다른 관점이나 뉴스 데이터를 활용하여 신선한 글을 작성해야 합니다.
+
     1. 독창적인 제목 (Catchy & Original Title):
        - **뉴스 헤드라인을 절대 그대로 사용하지 마십시오.** (표절 방지)
-       - 위 뉴스들을 관통하는 하나의 주제를 담은 매력적인 제목을 새로 지으십시오.
+       - 최근 주제들과 겹치지 않는 새로운 제목을 지으십시오.
+       - 제목은 반드시 결과물의 첫 줄에 '제목: [내용]' 형식으로 작성하십시오.
+    
+    ... (이하 기존 가이드라인 동일) ...
+    """
+    
+    # 실제 프롬프트 구성 (...(이하 기존 가이드라인 동일)... 부분을 실제 내용으로 채움)
+    prompt = f"""
+    당신은 "{category}" 분야의 전문 콘텐츠 에디터이자 전략적 블로거입니다. 
+    제시된 여러 최신 뉴스 정보를 바탕으로 독자들에게 강력한 통찰을 제공하는 '오리지널' 블로그 포스트를 작성하세요.
+
+    [최근 포스팅된 주제들 (중복 피하기)]
+    {history_context}
+
+    [참고할 최신 뉴스 소스들]
+    {news_context}
+
+    [필수 작성 및 구성 가이드라인]
+    1. 중복 및 표절 방지:
+       - **최근 포스팅된 주제들과 유사한 내용은 지양하고 새로운 시각을 제공하십시오.**
+       - **뉴스 헤드라인을 절대 제목으로 그대로 사용하지 마십시오.**
        - 제목은 반드시 결과물의 첫 줄에 '제목: [내용]' 형식으로 작성하십시오.
 
     2. 다중 소스 종합 분석 (Synthesis):
-       - 한 가지 뉴스만 요약하지 말고, 제공된 여러 뉴스 간의 연관성이나 흐름을 분석하여 하나의 완성된 글로 버무리십시오.
+       - 제공된 여러 뉴스 간의 연관성이나 흐름을 분석하여 하나의 완성된 글로 버무리십시오.
 
     3. PAS(Problem-Agitate-Solve) 방법론 적용:
        - **Problem**: 트렌드 속의 고민이나 궁금증 제기.
@@ -187,12 +242,16 @@ description: "{title}에 관한 실시간 트렌드 분석 포스트입니다."
 
 if __name__ == "__main__":
     print("--- 실시간 트렌드 기반 자동화 블로그 봇 가동 ---")
+    
+    # 최근 포스팅 이력 조회 (가장 최신 3개)
+    recent_titles = get_recent_posts_info(3)
+    
     category, news_list = get_daily_topic_v2()
     print(f"분야: {category}")
     
     if news_list:
         print(f"수집된 뉴스 수: {len(news_list)}")
-        title, content = generate_blog_post_v2(category, news_list)
+        title, content = generate_blog_post_v2(category, news_list, recent_titles)
         if title and content:
             save_post(title, content)
             print("--- 포스팅 파이프라인 무사히 종료 ---")
