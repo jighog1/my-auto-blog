@@ -132,9 +132,10 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
        - 최근 주제들과 겹치지 않는 새로운 시각을 제공하십시오.
 
     2. 이미지 및 멀티미디어:
-       - **이미지 키워드**: 글의 분위기에 맞는 Unsplash 검색용 **영문 키워드** 1개를 선정하십시오. 
-       - **주의**: 실사 사진보다는 주제와 어울리는 **'Illustration', '3D render', 'Minimalist vector'** 스타일의 이미지가 검색되도록 키워드를 조합하십시오. (예: 'AI illustration', 'Blockchain 3D')
-       - 결과 상단에 '이미지키워드: [키워드]' 형식으로 명시하십시오.
+       - **이미지 키워드**: 글의 분위기에 맞는 **영문 키워드 3~5개**를 선정하십시오. 
+       - **주의**: 키워드는 반드시 콤마(,)로 구분하여 한 줄로 작성하십시오. (예: AI,illustration,futuristic,blue)
+       - 실사 사진보다는 주제와 어울리는 **'Illustration', '3D render', 'Minimalist'** 스타일이 포함되도록 하십시오.
+       - 결과 상단에 '이미지키워드: [키워드1,키워드2...]' 형식으로 명시하십시오.
        - **Mermaid 다이어그램**: 정보의 구조나 흐름을 시각화할 수 있는 경우, 반드시 `mermaid` 코드 블록을 포함하십시오.
 
     3. PAS(Problem-Agitate-Solve) 방법론 적용 및 본문 작성:
