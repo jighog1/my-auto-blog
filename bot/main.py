@@ -51,6 +51,30 @@ def get_daily_topic_v2():
     main_news = news_list[0].split(" - ")[0] # 언론사 이름 제거 시도
     return category, main_news, news_list
 
+def get_best_model_list(client):
+    """사용자님의 API 키로 접근 가능한 모델 중 가장 좋은 'Flash' 및 'Pro' 모델을 순서대로 찾아옵니다."""
+    try:
+        # API를 통해 현재 계정에서 사용 가능한 모델 목록 조회
+        raw_models = [m.name for m in client.models.list()]
+        
+        # 1. Flash 모델들을 찾아 최신순(역순)으로 정렬 (예: 2.0-flash > 1.5-flash)
+        flash_models = sorted([m for m in raw_models if "flash" in m.lower() and "experimental" not in m.lower()], reverse=True)
+        # 2. Pro 모델들을 찾아 최신순으로 정렬
+        pro_models = sorted([m for m in raw_models if "pro" in m.lower() and "experimental" not in m.lower()], reverse=True)
+        
+        # Flash -> Pro 순서로 후보군 형성
+        final_list = flash_models + pro_models
+        
+        if not final_list:
+            # 절대 망하지 않기 위한 기본 모델 강제 삽입
+            final_list = ["gemini-2.0-flash", "gemini-1.5-flash"]
+            
+        print(f"🔍 실시간 탐색된 가용 모델 리스트: {final_list}")
+        return final_list
+    except Exception as e:
+        print(f"⚠️ 모델 목록 조회 중 오류 발생 (기본값 사용): {e}")
+        return ["gemini-2.0-flash", "gemini-1.5-flash"]
+
 def generate_blog_post_v2(category, topic, news_list):
     """수집된 뉴스 정보를 바탕으로 제미나이가 글을 작성합니다."""
     if not GEMINI_API_KEY:
@@ -58,6 +82,9 @@ def generate_blog_post_v2(category, topic, news_list):
         return None
 
     client = genai.Client()
+    
+    # 실시간 가용 모델 리스트 확보
+    model_candidates = get_best_model_list(client)
     
     news_context = "\n".join([f"- {n}" for n in news_list])
     
@@ -77,28 +104,28 @@ def generate_blog_post_v2(category, topic, news_list):
     - 출처나 언론사 이름은 본문에 직접적으로 언급하지 말고 정보 위주로 작성할 것.
     """
     
-    # 할당량 초과 대비 시도할 모델 후보군
-    model_candidates = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
-    
     for model_id in model_candidates:
         try:
-            print(f"🚀 인공지능 모델 호출 중: {model_id}...")
+            print(f"🚀 인공지능 모델 호출 시도 중: {model_id}...")
             response = client.models.generate_content(
                 model=model_id,
                 contents=prompt,
             )
-            print(f"✨ 모델 {model_id}으로 콘텐츠 생성 성공!")
+            print(f"✨ 모델 {model_id}으로 콘텐츠 생성 대성공!")
             return response.text
         except Exception as e:
             error_msg = str(e)
             if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-                print(f"⚠️ {model_id} 모델 할당량 초과(429). 다음 가용 모델로 전환을 시도합니다...")
+                print(f"⚠️ {model_id} 모델 할당량 초과(429). 다음 모델로 넘어갑니다...")
+                continue
+            elif "404" in error_msg or "NOT_FOUND" in error_msg:
+                print(f"⚠️ {model_id} 모델을 찾을 수 없음(404). 다음 모델을 시도합니다...")
                 continue
             else:
-                print(f"❌ {model_id} 호출 중 예상치 못한 오류 발생: {e}")
+                print(f"❌ {model_id} 처리 중 예상치 못한 오류 발생: {e}")
                 continue
                 
-    print("🚨 모든 가용 모델이 실패했습니다.")
+    print("🚨 모든 가용 모델이 실패했습니다. API 키 설정이나 할당량을 다시 확인해 주세요.")
     return None
 
 def save_post(topic, content):
