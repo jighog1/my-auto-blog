@@ -77,18 +77,29 @@ def generate_blog_post_v2(category, topic, news_list):
     - 출처나 언론사 이름은 본문에 직접적으로 언급하지 말고 정보 위주로 작성할 것.
     """
     
-    try:
-        # 가용한 리서치 능력이 높은 모델군 리스트 (가능하면 최신 버전)
-        target_model = 'gemini-2.0-flash' 
-        
-        response = client.models.generate_content(
-            model=target_model,
-            contents=prompt,
-        )
-        return response.text
-    except Exception as e:
-        print(f"콘텐츠 생성 중 오류: {e}")
-        return f"## 생성 오류 발생\n오류 내용: {e}"
+    # 할당량 초과 대비 시도할 모델 후보군
+    model_candidates = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro']
+    
+    for model_id in model_candidates:
+        try:
+            print(f"🚀 인공지능 모델 호출 중: {model_id}...")
+            response = client.models.generate_content(
+                model=model_id,
+                contents=prompt,
+            )
+            print(f"✨ 모델 {model_id}으로 콘텐츠 생성 성공!")
+            return response.text
+        except Exception as e:
+            error_msg = str(e)
+            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+                print(f"⚠️ {model_id} 모델 할당량 초과(429). 다음 가용 모델로 전환을 시도합니다...")
+                continue
+            else:
+                print(f"❌ {model_id} 호출 중 예상치 못한 오류 발생: {e}")
+                continue
+                
+    print("🚨 모든 가용 모델이 실패했습니다.")
+    return None
 
 def save_post(topic, content):
     now = datetime.datetime.now()
