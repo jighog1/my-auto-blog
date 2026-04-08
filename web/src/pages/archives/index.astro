@@ -10,7 +10,7 @@ import { SITE } from "@/config";
 
 // Redirect to 404 page if `showArchives` config is false
 if (!SITE.showArchives) {
-  return Astro.redirect("/404");
+  return Astro.redirect(`${import.meta.env.BASE_URL}404`);
 }
 
 const posts = await getCollection("blog", ({ data }) => !data.draft);

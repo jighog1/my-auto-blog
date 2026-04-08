@@ -1,36 +1,24 @@
-import { BLOG_PATH } from "@/content.config";
 import { slugifyStr } from "./slugify";
 
 /**
  * Get full path of a blog post
- * @param id - id of the blog post (aka slug)
- * @param filePath - the blog post full file location
- * @param includeBase - whether to include `/posts` in return value
- * @returns blog post path
+ * @param id - id of the blog post (the filename without extension, or subdir/filename)
+ * @param filePath - unused (kept for API compatibility)
+ * @param includeBase - whether to include `posts/` in return value
+ * @returns blog post path including BASE_URL
  */
 export function getPath(
   id: string,
   filePath: string | undefined,
   includeBase = true
 ) {
-  const pathSegments = filePath
-    ?.replace(BLOG_PATH, "")
-    .split("/")
-    .filter(path => path !== "") // remove empty string in the segments ["", "other-path"] <- empty string will be removed
-    .filter(path => !path.startsWith("_")) // exclude directories start with underscore "_"
-    .slice(0, -1) // remove the last segment_ file name_ since it's unnecessary
-    .map(segment => slugifyStr(segment)); // slugify each segment path
+  // id is like "auto-post-20260407162620" or "subdir/post-name"
+  // We only want the last segment (the slug itself), ignoring sub-directories
+  const slug = id.split("/").pop() ?? id;
 
-  const basePath = includeBase ? "/posts" : "";
+  const basePath = includeBase ? "posts" : "";
 
-  // Making sure `id` does not contain the directory
-  const blogId = id.split("/");
-  const slug = blogId.length > 0 ? blogId.slice(-1) : blogId;
+  const path = basePath ? `${basePath}/${slug}` : slug;
 
-  // If not inside the sub-dir, simply return the file path
-  const path = !pathSegments || pathSegments.length < 1
-    ? [basePath, slug].join("/")
-    : [basePath, ...pathSegments, slug].join("/");
-
-  return `${import.meta.env.BASE_URL}${path.startsWith("/") ? path.slice(1) : path}`;
+  return `${import.meta.env.BASE_URL}${path}`;
 }
