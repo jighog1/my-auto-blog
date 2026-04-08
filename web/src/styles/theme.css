@@ -1,0 +1,25 @@
+:root,
+html[data-theme="light"] {
+  --background: #f8fafc; /* Soft off-white */
+  --foreground: #0f172a; /* Deep slate */
+  --accent: #2563eb;    /* Clean blue */
+  --muted: #f1f5f9;
+  --border: #e2e8f0;
+}
+
+html[data-theme="dark"] {
+  --background: #0f172a; /* Deep slate */
+  --foreground: #f1f5f9;
+  --accent: #60a5fa;
+  --muted: #1e293b;
+  --border: #334155;
+}
+
+@theme {
+  --font-app: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+}

@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@reference "./global.css";
+@reference "./theme.css";
 @plugin "@tailwindcss/typography";
 
 @layer base {
