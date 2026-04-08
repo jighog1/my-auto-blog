@@ -20,7 +20,7 @@ html[data-theme="dark"] {
   --border: #334155;
 }
 
-@theme inline {
+@theme {
   --font-app: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -76,7 +76,8 @@ html[data-theme="dark"] {
 }
 
 .active-nav {
-  @apply text-accent font-semibold;
+  color: var(--accent);
+  font-weight: 600;
 }
 
 :target {
