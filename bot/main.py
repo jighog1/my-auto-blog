@@ -1,69 +1,86 @@
 import os
 import random
 import datetime
+import urllib.request
+import xml.etree.ElementTree as ET
 from google import genai
-import requests
 
 # 환경 변수 및 설정
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 BLOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../web/src/data/blog'))
 
-# 1. 주제 선정 모의 함수
-def get_daily_topic():
-    # 실제 환경에서는 Google Trends API 등을 활용할 수 수 있습니다.
-    topics = [
-        "2026년 프론트엔드 웹 개발 트렌드",
-        "자동화 시스템과 생산성 향상 노하우",
-        "개발자를 위한 멘탈 관리법",
-        "생성형 AI 시대, 개발자의 생존 전략",
-        "초보자도 따라 할 수 있는 SEO 최적화 가이드"
-    ]
-    return random.choice(topics)
+# 카테고리 정의 및 검색 키워드
+CATEGORIES = {
+    "IT/기술 트렌드": "IT 트렌드 소프트웨어 기술",
+    "정보보안 이슈": "사이버 보안 해킹 이슈",
+    "AI 및 자동화": "인공지능 생성형 AI",
+    "경제 및 비즈니스": "경제 트렌드 비즈니스 인사이트"
+}
 
-# 2. 본문 생성 함수 (Gemini)
-def generate_blog_post(topic):
+def fetch_trend_news(category):
+    """지정한 카테고리의 최신 뉴스 제목 3개를 가져옵니다."""
+    query = CATEGORIES.get(category, "최신 기술")
+    encoded_query = urllib.parse.quote(query)
+    # Google News RSS URL
+    url = f"https://news.google.com/rss/search?q={encoded_query}&hl=ko&gl=KR&ceid=KR:ko"
+    
+    try:
+        with urllib.request.urlopen(url) as response:
+            xml_data = response.read()
+        
+        root = ET.fromstring(xml_data)
+        news_items = []
+        for item in root.findall('.//item')[:3]:
+            title = item.find('title').text
+            news_items.append(title)
+        
+        return news_items
+    except Exception as e:
+        print(f"뉴스 수집 중 오류 발생: {e}")
+        return []
+
+def get_daily_topic_v2():
+    """랜덤하게 카테고리를 정하고 해당 분야의 뉴스를 수집하여 주제를 도출합니다."""
+    category = random.choice(list(CATEGORIES.keys()))
+    news_list = fetch_trend_news(category)
+    
+    if not news_list:
+        return category, "최신 트렌드 분석", []
+    
+    # 첫 번째 뉴스 제목을 기반으로 주제를 생성하거나 뉴스 리스트 자체를 반환
+    main_news = news_list[0].split(" - ")[0] # 언론사 이름 제거 시도
+    return category, main_news, news_list
+
+def generate_blog_post_v2(category, topic, news_list):
+    """수집된 뉴스 정보를 바탕으로 제미나이가 글을 작성합니다."""
     if not GEMINI_API_KEY:
-        print("GEMINI_API_KEY 환경 변수가 없습니다. 더미 텍스트를 반환합니다.")
-        return f"## {topic} 관련 임시 내용입니다.\n\n이것은 API KEY 없이 생성된 더미 콘텐츠입니다. API 키가 주어지면 이 영역에 AI가 작성한 긴 글이 들어갑니다."
+        print("GEMINI_API_KEY 환경 변수가 없습니다. 작업 중단.")
+        return None
 
     client = genai.Client()
+    
+    news_context = "\n".join([f"- {n}" for n in news_list])
+    
     prompt = f"""
-    당신은 전문적인 IT/테크 블로거입니다. 다음 주제에 대해 블로그 포스트를 작성해 주세요:
-    주제: {topic}
+    당신은 "{category}" 전문 블로거입니다. 
+    오늘의 주요 뉴스 테마는 다음과 같습니다:
+    {news_context}
+
+    이 뉴스 정보들을 바탕으로 "{topic}"에 관한 깊이 있는 분석 포스트를 작성해 주세요.
     
     요구사항:
     - 한국어로 작성할 것.
     - SEO에 최적화되도록 구성. (H2, H3 태그 등 적절히 사용)
+    - 단순 나열이 아닌, 뉴스 내용을 종합하여 독자들에게 도움이 되는 '인사이트'를 제공할 것.
     - 도입부 - 본문 - 결론 구조로 작성.
-    - 친근하고 읽기 쉬운 문체 사용.
     - 제목(Title) 메타데이터나 H1은 제외하고 본문(H2 이하)부터 반환할 것.
+    - 출처나 언론사 이름은 본문에 직접적으로 언급하지 말고 정보 위주로 작성할 것.
     """
     
     try:
-        target_model = 'gemini-2.5-flash'  # 기본 Fallback
-        try:
-            # 1. API에 접속하여 현재 계정이 사용 가능한 모델 리스트 조회
-            available_models = [m.name.replace('models/', '') for m in client.models.list()]
-            
-            # 2. 가장 안정적이고 속도가 빠른 '정식 릴리즈된 Flash 모델' 우선 순위 목록 (preview, exp 제외)
-            whitelist = [
-                'gemini-3.0-flash', 
-                'gemini-2.5-flash', 
-                'gemini-2.0-flash', 
-                'gemini-1.5-flash'
-            ]
-            
-            # 3. 화이트리스트 중 내 계정(available_models)에서 사용할 수 있는 가장 최신 버전을 선택
-            for w_model in whitelist:
-                if w_model in available_models:
-                    target_model = w_model
-                    break
-        except Exception as e:
-            print(f"모델 목록 조회 중 오류(무시가능): {e}")
-
-        print(f"🚀 안정성 확인 후 최종 선택된 생성 AI 모델: {target_model}")
-
-        # 선택된 모델로 글 작성 요청 수행
+        # 가용한 리서치 능력이 높은 모델군 리스트 (가능하면 최신 버전)
+        target_model = 'gemini-2.0-flash' 
+        
         response = client.models.generate_content(
             model=target_model,
             contents=prompt,
@@ -73,13 +90,10 @@ def generate_blog_post(topic):
         print(f"콘텐츠 생성 중 오류: {e}")
         return f"## 생성 오류 발생\n오류 내용: {e}"
 
-# 3. 마크다운 파일 저장 (Astro 포맷에 맞춤)
 def save_post(topic, content):
     now = datetime.datetime.now()
-    date_str = now.strftime('%Y-%m-%d')
     slug = f"auto-post-{now.strftime('%Y%m%d%H%M%S')}"
     
-    # Astro Paper 블로그 Frontmatter 구조
     frontmatter = f"""---
 title: "{topic}"
 author: "AI Bot"
@@ -87,27 +101,29 @@ pubDatetime: {now.strftime('%Y-%m-%dT%H:%M:%SZ')}
 featured: false
 draft: false
 tags:
-  - AI
-  - Tech
-description: "{topic}에 관한 자동 생성된 프리미엄 포스트입니다."
+  - Trend
+  - Automation
+description: "{topic}에 관한 실시간 트렌드 분석 포스트입니다."
 ---
 
 """
     filename = os.path.join(BLOG_DIR, f"{slug}.md")
-    
-    # 폴더가 없으면 생성 (최초 실행 대비)
     os.makedirs(BLOG_DIR, exist_ok=True)
     
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(frontmatter + content)
         
-    print(f"새 포스트 작성 완료: {filename}")
+    print(f"새 포스트 저장 완료: {filename}")
 
 if __name__ == "__main__":
-    print("--- 자동화 블로그 포스터 시작 ---")
-    topic = get_daily_topic()
-    print(f"선정된 주제: {topic}")
+    print("--- 실시간 트렌드 기반 자동화 블로그 봇 가동 ---")
+    category, topic, news_list = get_daily_topic_v2()
+    print(f"분야: {category}")
+    print(f"헤드라인: {topic}")
     
-    content = generate_blog_post(topic)
-    save_post(topic, content)
-    print("--- 포스팅 파이프라인 종료 ---")
+    content = generate_blog_post_v2(category, topic, news_list)
+    if content:
+        save_post(topic, content)
+        print("--- 포스팅 파이프라인 무사히 종료 ---")
+    else:
+        print("--- 콘텐츠 생성 실패로 종료 ---")
