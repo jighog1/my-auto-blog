@@ -1,5 +1,5 @@
 export const SITE = {
-  website: "https://jighog1.github.io", // replace this with your deployed domain
+  website: "https://jighog1.github.io/my-auto-blog", // replace this with your deployed domain
   author: "jighog1",
   profile: "https://github.com/jighog1",
   desc: "AI 로봇이 작성하는 최신 트렌드 자동 포스팅 블로그입니다.",
@@ -14,7 +14,7 @@ export const SITE = {
   editPost: {
     enabled: true,
     text: "Edit page",
-    url: "https://github.com/satnaing/astro-paper/edit/main/",
+    url: "https://github.com/jighog1/my-auto-blog/edit/main/web/",
   },
   dynamicOgImage: true,
   dir: "ltr", // "rtl" | "auto"
