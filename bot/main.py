@@ -75,11 +75,11 @@ def get_best_model_list(client):
         print(f"⚠️ 모델 목록 조회 중 오류 발생 (기본값 사용): {e}")
         return ["gemini-2.0-flash", "gemini-1.5-flash"]
 
-def generate_blog_post_v2(category, topic, news_list):
-    """수집된 뉴스 정보를 바탕으로 제미나이가 글을 작성합니다."""
+def generate_blog_post_v2(category, news_list):
+    """수집된 여러 뉴스 정보를 종합하여 독창적인 제목과 본문을 작성합니다."""
     if not GEMINI_API_KEY:
         print("GEMINI_API_KEY 환경 변수가 없습니다. 작업 중단.")
-        return None
+        return None, None
 
     client = genai.Client()
     
@@ -90,32 +90,34 @@ def generate_blog_post_v2(category, topic, news_list):
     
     prompt = f"""
     당신은 "{category}" 분야의 전문 콘텐츠 에디터이자 전략적 블로거입니다. 
-    제시된 최신 뉴스 정보를 바탕으로 독자들에게 강력한 통찰을 제공하는 프리미엄 블로그 포스트를 작성하세요.
+    제시된 여러 최신 뉴스 정보를 바탕으로 독자들에게 강력한 통찰을 제공하는 '오리지널' 블로그 포스트를 작성하세요.
 
-    [오늘의 참고 뉴스]
+    [참고할 최신 뉴스 소스들]
     {news_context}
 
-    [작성할 포스트 주제]
-    {topic}
+    [필수 작성 및 구성 가이드라인]
+    1. 독창적인 제목 (Catchy & Original Title):
+       - **뉴스 헤드라인을 절대 그대로 사용하지 마십시오.** (표절 방지)
+       - 위 뉴스들을 관통하는 하나의 주제를 담은 매력적인 제목을 새로 지으십시오.
+       - 제목은 반드시 결과물의 첫 줄에 '제목: [내용]' 형식으로 작성하십시오.
 
-    [필수 작성 가이드라인]
-    1. PAS(Problem-Agitate-Solve) 방법론 적용:
-       - **Problem (문제 제기)**: 독자가 직면한 현실적인 고민이나 최신 트렌드 속에서 가질 수 있는 궁금증을 제시하며 흥미를 유발하세요.
-       - **Agitate (문제 심화)**: 이 이슈가 왜 지금 중요한지, 제대로 알지 못했을 때 어떤 기회비용이 발생하는지 뉴스 배경을 바탕으로 상세히 분석하세요.
-       - **Solve (해결책 및 인사이트)**: 수집된 뉴스 정보들을 종합하여 독자가 얻어야 할 실질적인 정보와 미래 전망을 명확하게 제시하세요.
+    2. 다중 소스 종합 분석 (Synthesis):
+       - 한 가지 뉴스만 요약하지 말고, 제공된 여러 뉴스 간의 연관성이나 흐름을 분석하여 하나의 완성된 글로 버무리십시오.
 
-    2. 시맨틱 구조 및 SEO:
-       - 제목(H1)은 시스템에서 별도로 처리하므로 **본문 내에 H1 태그를 절대 사용하지 마십시오.**
-       - 본문의 소제목은 반드시 **H2(##)**와 **H3(###)**만을 사용하여 논리적 계층을 만드십시오.
+    3. PAS(Problem-Agitate-Solve) 방법론 적용:
+       - **Problem**: 트렌드 속의 고민이나 궁금증 제기.
+       - **Agitate**: 이 이슈의 중요성과 몰랐을 때의 위험성 분석.
+       - **Solve**: 뉴스 기반의 해결책 및 독창적 인사이트 제공.
 
-    3. 가독성(Scannability) 최적화:
-       - 모든 문단은 모바일 가독성을 고려하여 **최대 3~4줄 단위**로 짧게 끊어서 작성하십시오.
-       - 글의 핵심 요약이나 인사이트는 반드시 **불릿 포인트(Bullet point)**를 사용하여 한눈에 들어오게 정리하십시오.
+    4. SEO 및 가독성:
+       - 본문 내 H1 금지. H2(##), H3(###)만 사용.
+       - 문단은 3-4줄 단위로 짧게.
+       - 핵심 요약은 반드시 **불릿 포인트** 사용.
 
-    4. 문체 및 구성:
-       - 전문적이면서도 친근한 어조를 유지하십시오. (한국어 작성)
-       - 단순 뉴스 요약이 아닌, 당신만의 독창적인 분석과 인사이트가 포함되어야 합니다.
-       - 출처 이름(언론사 등)을 직접 언급하기보다 '최신 보고서에 따르면', '업계 전문가들은'과 같은 자연스러운 문구를 사용하십시오.
+    결과물 형식 예시:
+    제목: [당신이 지은 독창적 제목]
+    
+    [본문 내용...]
     """
     
     for model_id in model_candidates:
@@ -125,8 +127,24 @@ def generate_blog_post_v2(category, topic, news_list):
                 model=model_id,
                 contents=prompt,
             )
-            print(f"✨ 모델 {model_id}으로 콘텐츠 생성 대성공!")
-            return response.text
+            raw_text = response.text
+            
+            # 제목과 본문 분리 파싱
+            lines = raw_text.strip().split('\n')
+            title = "새로운 트렌드 분석"
+            content_start_idx = 0
+            
+            if lines[0].startswith("제목:"):
+                title = lines[0].replace("제목:", "").strip()
+                content_start_idx = 1
+            elif ":" in lines[0] and len(lines[0]) < 100:
+                title = lines[0].split(":", 1)[1].strip()
+                content_start_idx = 1
+                
+            body_text = "\n".join(lines[content_start_idx:]).strip()
+            
+            print(f"✨ 모델 {model_id}으로 독창적 콘텐츠 생성 대성공!")
+            return title, body_text
         except Exception as e:
             error_msg = str(e)
             if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
@@ -140,14 +158,14 @@ def generate_blog_post_v2(category, topic, news_list):
                 continue
                 
     print("🚨 모든 가용 모델이 실패했습니다. API 키 설정이나 할당량을 다시 확인해 주세요.")
-    return None
+    return None, None
 
-def save_post(topic, content):
+def save_post(title, content):
     now = datetime.datetime.now()
     slug = f"auto-post-{now.strftime('%Y%m%d%H%M%S')}"
     
     frontmatter = f"""---
-title: "{topic}"
+title: "{title}"
 author: "AI Bot"
 pubDatetime: {now.strftime('%Y-%m-%dT%H:%M:%SZ')}
 featured: false
@@ -155,7 +173,7 @@ draft: false
 tags:
   - Trend
   - Automation
-description: "{topic}에 관한 실시간 트렌드 분석 포스트입니다."
+description: "{title}에 관한 실시간 트렌드 분석 포스트입니다."
 ---
 
 """
@@ -169,13 +187,16 @@ description: "{topic}에 관한 실시간 트렌드 분석 포스트입니다."
 
 if __name__ == "__main__":
     print("--- 실시간 트렌드 기반 자동화 블로그 봇 가동 ---")
-    category, topic, news_list = get_daily_topic_v2()
+    category, news_list = get_daily_topic_v2()
     print(f"분야: {category}")
-    print(f"헤드라인: {topic}")
     
-    content = generate_blog_post_v2(category, topic, news_list)
-    if content:
-        save_post(topic, content)
-        print("--- 포스팅 파이프라인 무사히 종료 ---")
+    if news_list:
+        print(f"수집된 뉴스 수: {len(news_list)}")
+        title, content = generate_blog_post_v2(category, news_list)
+        if title and content:
+            save_post(title, content)
+            print("--- 포스팅 파이프라인 무사히 종료 ---")
+        else:
+            print("--- 콘텐츠 생성 실패로 종료 ---")
     else:
-        print("--- 콘텐츠 생성 실패로 종료 ---")
+        print("--- 뉴스 수집 실패로 종료 ---")
