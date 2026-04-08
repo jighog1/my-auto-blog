@@ -1,18 +1,18 @@
 :root,
 html[data-theme="light"] {
-  --background: #f8fafc; /* Soft off-white */
-  --foreground: #0f172a; /* Deep slate */
-  --accent: #2563eb;    /* Clean blue */
-  --muted: #f1f5f9;
-  --border: #e2e8f0;
+  --background: #ffffff;
+  --foreground: #333333;
+  --accent: #0066b8;
+  --muted: #f3f3f3;
+  --border: #cccccc;
 }
 
 html[data-theme="dark"] {
-  --background: #0f172a; /* Deep slate */
-  --foreground: #f1f5f9;
-  --accent: #60a5fa;
-  --muted: #1e293b;
-  --border: #334155;
+  --background: #1e1e1e; /* VS Code Deep Dark */
+  --foreground: #d4d4d4; /* Soft White */
+  --accent: #007acc;    /* VS Code Blue */
+  --muted: #2d2d2d;
+  --border: #404040;
 }
 
 @theme {

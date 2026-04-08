@@ -36,7 +36,7 @@
 
 /* Minimal Modern Glassmorphism */
 @utility glass {
-  @apply bg-background/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-sm;
+  @apply bg-background/80 backdrop-blur-sm border border-border/50 shadow-sm transition-all;
 }
 
 @utility app-layout {
@@ -61,5 +61,5 @@
 
 /* Cleaner Card Style */
 .card-hover {
-  @apply transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-black/20 hover:border-accent/30;
+  @apply transition-all duration-300 hover:shadow-2xl hover:shadow-black/10 dark:hover:shadow-black/40 hover:border-accent/50;
 }
