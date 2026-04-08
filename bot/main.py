@@ -6,7 +6,7 @@ import requests
 
 # 환경 변수 및 설정
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-BLOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../web/src/content/blog'))
+BLOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../web/src/data/blog'))
 
 # 1. 주제 선정 모의 함수
 def get_daily_topic():
