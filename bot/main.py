@@ -79,11 +79,17 @@ def save_post(topic, content):
     date_str = now.strftime('%Y-%m-%d')
     slug = f"auto-post-{now.strftime('%Y%m%d%H%M%S')}"
     
-    # Astro 블로그 Frontmatter 구조
+    # Astro Paper 블로그 Frontmatter 구조
     frontmatter = f"""---
 title: "{topic}"
-description: "{topic}에 관한 자동 생성된 포스트입니다."
-pubDate: "{now.strftime('%b %d %Y')}"
+author: "AI Bot"
+pubDatetime: {now.strftime('%Y-%m-%dT%H:%M:%SZ')}
+featured: false
+draft: false
+tags:
+  - AI
+  - Tech
+description: "{topic}에 관한 자동 생성된 프리미엄 포스트입니다."
 ---
 
 """
