@@ -26,7 +26,7 @@ const relatedPosts = allPosts
     <h2 class="mb-8 text-2xl font-bold text-accent">함께 읽으면 좋은 글</h2>
     <ul class="grid gap-8">
       {relatedPosts.map(post => (
-        <Card variant="h3" id={post.id} data={post.data} filePath={post.filePath} />
+        <Card variant="h3" id={post.id} collection="blog" data={post.data} filePath={post.filePath} />
       ))}
     </ul>
   </section>
