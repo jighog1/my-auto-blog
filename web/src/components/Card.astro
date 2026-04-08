@@ -16,7 +16,7 @@ const { title, description, author, ogImage, ...props } = data;
 const thumbnailUrl = typeof ogImage === "string" ? ogImage : ogImage?.src;
 ---
 
-<li class="group card-hover glass my-6 overflow-hidden rounded-xl bg-white/50 dark:bg-slate-800/50">
+<li class="group card-hover glass my-6 overflow-hidden rounded-xl bg-muted/30">
   <a
     href={getPath(id, filePath)}
     class="grid gap-8 p-6 sm:grid-cols-12"

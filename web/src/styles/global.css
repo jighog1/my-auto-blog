@@ -21,11 +21,11 @@
   /* Very Subtle Decorative Sparkle */
   body::before {
     content: "";
-    @apply fixed inset-0 -z-10 opacity-40 dark:opacity-20 pointer-events-none;
+    @apply fixed inset-0 -z-10 opacity-20 dark:opacity-10 pointer-events-none;
     background-image: 
       radial-gradient(at 0% 0%, var(--accent) 0, transparent 40%), 
       radial-gradient(at 100% 100%, #4facfe 0, transparent 40%);
-    filter: blur(120px);
+    filter: blur(150px);
   }
 
   a,
@@ -36,7 +36,7 @@
 
 /* Minimal Modern Glassmorphism */
 @utility glass {
-  @apply bg-background/80 backdrop-blur-sm border border-border/50 shadow-sm transition-all;
+  @apply bg-background/50 backdrop-blur-md border border-border/50 shadow-sm transition-all;
 }
 
 @utility app-layout {
