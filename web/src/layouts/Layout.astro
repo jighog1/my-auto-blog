@@ -172,5 +172,17 @@ const structuredData = {
 
     <!-- Load full theme logic -->
     <script src="../scripts/theme.ts"></script>
+    
+    <!-- Mermaid.js Support -->
+    <script is:inline type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true, theme: 'default' });
+      
+      // Astro View Transitions 대응: 페이지 전환 시마다 Mermaid 재렌더링
+      document.addEventListener('astro:after-swap', () => {
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.run();
+      });
+    </script>
   </body>
 </html>
