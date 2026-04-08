@@ -95,29 +95,32 @@ const nextPost =
       <div class="grid grid-cols-1 gap-12 lg:grid-cols-4">
         <!-- Main Article Content -->
         <div class="lg:col-span-3">
-          <header class="mb-8">
+          <header class="mb-12">
             <h1
               transition:name={slugifyStr(title.replaceAll(".", "-"))}
-              class="text-3xl font-extrabold text-accent sm:text-4xl"
+              class="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl"
             >
               {title}
             </h1>
-            <div class="mt-4 flex flex-wrap items-center gap-4 text-sm opacity-85">
-              <span class="font-bold text-accent">By {author}</span>
-              <span class="opacity-50">|</span>
+            <div class="mt-6 flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
+              <span class="flex items-center gap-1.5 font-bold text-accent">
+                <span class="size-1.5 rounded-full bg-accent"></span>
+                {author}
+              </span>
+              <span class="opacity-30">|</span>
               <Datetime {pubDatetime} {modDatetime} {timezone} />
             </div>
             
             {ogImageUrl && (
-              <div class="mt-8 overflow-hidden rounded-2xl shadow-xl">
-                <img src={ogImageUrl} alt={title} class="w-full object-cover max-h-[400px]" />
+              <div class="mt-10 overflow-hidden rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none">
+                <img src={ogImageUrl} alt={title} class="w-full object-cover max-h-[500px]" />
               </div>
             )}
           </header>
 
           <article
             id="article"
-            class="app-prose w-full prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
+            class="app-prose w-full"
           >
             <Content />
           </article>

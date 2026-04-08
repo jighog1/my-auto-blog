@@ -5,23 +5,23 @@
 
 :root,
 html[data-theme="light"] {
-  --background: #fdfdfd;
-  --foreground: #282728;
-  --accent: #006cac;
-  --muted: #e6e6e6;
-  --border: #ece9e9;
+  --background: #f8fafc; /* Soft off-white */
+  --foreground: #0f172a; /* Deep slate */
+  --accent: #2563eb;    /* Clean blue */
+  --muted: #f1f5f9;
+  --border: #e2e8f0;
 }
 
 html[data-theme="dark"] {
-  --background: #212737;
-  --foreground: #eaedf3;
-  --accent: #ff6b01;
-  --muted: #343f60;
-  --border: #ab4b08;
+  --background: #0f172a; /* Deep slate */
+  --foreground: #f1f5f9;
+  --accent: #60a5fa;
+  --muted: #1e293b;
+  --border: #334155;
 }
 
 @theme inline {
-  --font-app: var(--font-google-sans-code);
+  --font-app: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
@@ -31,7 +31,7 @@ html[data-theme="dark"] {
 
 @layer base {
   * {
-    @apply border-border outline-accent/75;
+    @apply border-border outline-accent/50;
     scrollbar-width: thin;
     scrollbar-color: var(--color-accent) transparent;
   }
@@ -39,62 +39,51 @@ html[data-theme="dark"] {
     @apply overflow-y-scroll scroll-smooth;
   }
   body {
-    @apply flex min-h-svh flex-col font-app text-foreground selection:bg-accent/75 selection:text-background relative overflow-x-hidden;
+    @apply flex min-h-svh flex-col font-app text-foreground selection:bg-accent/20 selection:text-accent relative;
     background-color: var(--background);
   }
   
-  /* Premium Mesh Gradient Background */
+  /* Very Subtle Decorative Sparkle */
   body::before {
     content: "";
-    @apply fixed inset-0 -z-10 opacity-30 dark:opacity-20 pointer-events-none;
-    background: 
-      radial-gradient(circle at 0% 0%, var(--accent) 0%, transparent 50%),
-      radial-gradient(circle at 100% 100%, var(--accent) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, #4facfe 0%, transparent 50%);
-    filter: blur(80px);
+    @apply fixed inset-0 -z-10 opacity-40 dark:opacity-20 pointer-events-none;
+    background-image: 
+      radial-gradient(at 0% 0%, var(--accent) 0, transparent 40%), 
+      radial-gradient(at 100% 100%, #4facfe 0, transparent 40%);
+    filter: blur(120px);
   }
 
   a,
   button {
-    @apply transition-all duration-300 outline-offset-1 outline-accent focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
-  }
-  button:not(:disabled),
-  [role="button"]:not(:disabled) {
-    cursor: pointer;
+    @apply transition-all duration-200 outline-offset-1 focus-visible:outline-2;
   }
 }
 
-/* Glassmorphism Utility */
+/* Minimal Modern Glassmorphism */
 @utility glass {
-  @apply bg-background/70 backdrop-blur-md border border-white/10 shadow-lg;
+  @apply bg-background/80 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 shadow-sm;
 }
 
 @utility app-layout {
-  @apply mx-auto w-full max-w-4xl px-6;
+  @apply mx-auto w-full max-w-5xl px-8;
 }
 
 @utility app-prose {
-  @apply prose prose-invert max-w-none;
+  @apply prose prose-slate max-w-none dark:prose-invert;
   --tw-prose-body: var(--foreground);
-  --tw-prose-headings: var(--accent);
+  --tw-prose-headings: var(--foreground);
   --tw-prose-links: var(--accent);
 }
 
 .active-nav {
-  @apply font-bold text-accent;
-  position: relative;
-}
-
-.active-nav::after {
-  content: "";
-  @apply absolute -bottom-1 left-0 h-0.5 w-full bg-accent scale-x-100;
+  @apply text-accent font-semibold;
 }
 
 :target {
-  scroll-margin-block: 2rem;
+  scroll-margin-block: 2.5rem;
 }
 
-/* Base Card Style */
+/* Cleaner Card Style */
 .card-hover {
-  @apply transition-all duration-350 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent/10;
+  @apply transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-black/20 hover:border-accent/30;
 }

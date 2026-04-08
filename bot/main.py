@@ -193,20 +193,17 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
     print("🚨 모든 가용 모델이 실패했습니다.")
     return None, None, None
 
+import urllib.parse
+
 def save_post(title, image_keyword, content):
     now = datetime.datetime.now()
     slug = f"auto-post-{now.strftime('%Y%m%d%H%M%S')}"
     
-    # Unsplash 고해상도 이미지 URL 생성 (키워드 기반)
-    image_url = f"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80&keywords={image_keyword}"
-    # 실제로는 쿼리 스트링만으로 이미지가 바뀌지 않을 수 있으므로, Unsplash Source Redirect를 활용하거나
-    # 단순히 키워드를 포함한 고품질 플레이스홀더를 사용합니다. 
-    # 여기서는 Unsplash의 공식적인 키워드 기반 리다이렉트 방식을 모사하거나 직접적인 텍스트 기반 테마를 권장합니다.
-    image_url = f"https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80" # 기본 테크 이미지
-    if image_keyword:
-        # 키워드에 따라 신뢰할 수 있는 소스 이미지 활용 (Source Unsplash는 현재 작동 방식이 변경됨)
-        # 퀄리티를 위해 LoremFlickr 검색 리다이렉트를 활용합니다.
-        image_url = f"https://loremflickr.com/1200/630/{image_keyword}"
+    # 이미지 키워드 URL 인코딩 (공백 및 특수문자 처리)
+    encoded_keyword = urllib.parse.quote(image_keyword) if image_keyword else "technology"
+    
+    # LoremFlickr 검색 리다이렉트 활용
+    image_url = f"https://loremflickr.com/1200/630/{encoded_keyword}"
 
     frontmatter = f"""---
 title: "{title}"
