@@ -1,16 +1,16 @@
 :root {
   --background: #ffffff;
   --foreground: #333333;
-  --accent: #0066b8;
+  --accent: #0066b8;    /* VS Code Light Blue */
   --muted: #f3f3f3;
-  --border: #cccccc;
+  --border: #e8e8e8;
 }
 
 html[data-theme="dark"] {
-  --background: #0d0d0d; /* Pure Dark for VS Code vibe */
-  --foreground: #d4d4d4;
-  --accent: #007acc;
-  --muted: #1e1e1e;
+  --background: #1e1e1e; /* VS Code Default Dark */
+  --foreground: #d4d4d4; /* VS Code Soft White */
+  --accent: #3794ef;    /* VS Code Dark Blue */
+  --muted: #252526;
   --border: #333333;
 }
 

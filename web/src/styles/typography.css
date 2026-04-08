@@ -95,7 +95,7 @@
 
   /* ===== Code Blocks & Syntax Highlighting ===== */
   .astro-code {
-    @apply flex border border-border bg-[#1e1e1e] text-[#d4d4d4] outline-border [&_span]:text-inherit;
+    @apply flex border border-border bg-muted/50 text-foreground outline-border;
   }
 
   html[data-theme="dark"] .astro-code {

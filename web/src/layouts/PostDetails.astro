@@ -102,7 +102,7 @@ const nextPost =
             >
               {title}
             </h1>
-            <div class="mt-6 flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
+            <div class="mt-6 flex flex-wrap items-center gap-4 text-sm font-medium text-foreground/75">
               <span class="flex items-center gap-1.5 font-bold text-accent">
                 <span class="size-1.5 rounded-full bg-accent"></span>
                 {author}
@@ -112,7 +112,7 @@ const nextPost =
             </div>
             
             {ogImageUrl && (
-              <div class="mt-10 overflow-hidden rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none">
+              <div class="mt-10 overflow-hidden rounded-2xl shadow-2xl shadow-black/5 dark:shadow-none">
                 <img src={ogImageUrl} alt={title} class="w-full object-cover max-h-[500px]" />
               </div>
             )}
