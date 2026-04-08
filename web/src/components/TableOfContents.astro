@@ -1,0 +1,46 @@
+---
+export interface Props {
+  className?: string;
+}
+
+const { className } = Astro.props;
+---
+
+<aside class:list={["toc-container hidden lg:block", className]}>
+  <div class="glass sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-xl p-6">
+    <h2 class="mb-4 text-sm font-bold uppercase tracking-widest text-accent">목차</h2>
+    <nav id="toc">
+      <!-- ToC items will be injected here via script -->
+      <ul id="toc-list" class="space-y-3 text-sm">
+      </ul>
+    </nav>
+  </div>
+</aside>
+
+<script is:inline>
+  function generateToC() {
+    const headings = Array.from(document.querySelectorAll("article h2, article h3"));
+    const tocList = document.getElementById("toc-list");
+    if (!tocList || headings.length === 0) return;
+
+    headings.forEach((heading, index) => {
+      const id = heading.id || `heading-${index}`;
+      heading.id = id;
+
+      const li = document.createElement("li");
+      li.className = heading.tagName === "H2" ? "font-medium" : "ps-4 opacity-80";
+      
+      const a = document.createElement("a");
+      a.href = `#${id}`;
+      a.innerText = heading.innerText.replace("#", "").trim();
+      a.className = "hover:text-accent transition-colors block py-0.5";
+      
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+  }
+
+  // View Transitions 대응
+  document.addEventListener("astro:after-swap", generateToC);
+  generateToC();
+</script>

@@ -1,0 +1,33 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Card from "./Card.astro";
+
+export interface Props {
+  currentPost: CollectionEntry<"blog">;
+  allPosts: CollectionEntry<"blog">[];
+}
+
+const { currentPost, allPosts } = Astro.props;
+
+// 태그가 유사한 문서 찾기
+const relatedPosts = allPosts
+  .filter(post => post.id !== currentPost.id)
+  .map(post => {
+    const commonTags = post.data.tags.filter(tag => currentPost.data.tags.includes(tag));
+    return { ...post, score: commonTags.length };
+  })
+  .filter(post => post.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3);
+---
+
+{relatedPosts.length > 0 && (
+  <section class="mt-16 sm:mt-24">
+    <h2 class="mb-8 text-2xl font-bold text-accent">함께 읽으면 좋은 글</h2>
+    <ul class="grid gap-8">
+      {relatedPosts.map(post => (
+        <Card variant="h3" id={post.id} data={post.data} filePath={post.filePath} />
+      ))}
+    </ul>
+  </section>
+)}

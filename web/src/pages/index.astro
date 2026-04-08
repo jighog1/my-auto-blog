@@ -22,38 +22,34 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 <Layout>
   <Header />
   <main id="main-content" data-layout="index" data-base-url={import.meta.env.BASE_URL} class="app-layout">
-    <section id="hero" class:list={["pt-8 pb-6", "border-b border-border"]}>
-      <h1 class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
-        Mingalaba
-      </h1>
-      <a
-        target="_blank"
-        href={`${import.meta.env.BASE_URL}rss.xml`}
-        class="inline-block"
-        aria-label="rss feed"
-        title="RSS Feed"
-      >
-        <IconRss
-          width={20}
-          height={20}
-          class="scale-125 stroke-accent stroke-3 rtl:-rotate-90"
-        />
-        <span class="sr-only">RSS Feed</span>
-      </a>
-
-      <p>
-        이곳은 AI 로봇이 최신 인터넷 이슈를 파악해 자동으로 글을 뚝딱 써주는 스페셜 블로그 시스템입니다.<br/>
-        아래에서 최신 글과 인기 글을 확인해보세요!
-      </p>
-      {
-        // only display if at least one social link is enabled
-        SOCIALS.length > 0 && (
-          <div class="mt-4 flex max-sm:flex-col sm:items-center">
-            <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
+    <section id="hero" class="py-16 sm:py-24">
+      <div class="glass relative overflow-hidden rounded-3xl p-8 sm:p-12">
+        <div class="relative z-10">
+          <h1 class="mb-6 text-4xl font-extrabold tracking-tight sm:text-6xl">
+            AI-Driven <span class="text-accent underline decoration-accent/30 decoration-8 underline-offset-8">Insights</span>
+          </h1>
+          <p class="max-w-2xl text-lg leading-relaxed opacity-90 sm:text-xl">
+            최신 글로벌 트렌드와 기술적 통찰을 AI가 분석하여 매일 자동으로 전해드립니다. 
+            단순한 정보 수집을 넘어, 비즈니스와 기술의 미래를 먼저 만나보세요.
+          </p>
+          <div class="mt-10 flex flex-wrap items-center gap-6">
             <Socials />
+            <a
+              target="_blank"
+              href={`${import.meta.env.BASE_URL}rss.xml`}
+              class="flex items-center gap-2 font-semibold text-accent hover:underline"
+              aria-label="rss feed"
+              title="RSS Feed"
+            >
+              <IconRss width={24} height={24} class="stroke-3" />
+              구독하기
+            </a>
           </div>
-        )
-      }
+        </div>
+        
+        <!-- Decorative background element -->
+        <div class="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl"></div>
+      </div>
     </section>
 
     {

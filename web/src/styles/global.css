@@ -32,18 +32,31 @@ html[data-theme="dark"] {
 @layer base {
   * {
     @apply border-border outline-accent/75;
-    scrollbar-width: auto;
-    scrollbar-color: var(--color-muted) transparent;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-accent) transparent;
   }
   html {
     @apply overflow-y-scroll scroll-smooth;
   }
   body {
-    @apply flex min-h-svh flex-col bg-background font-app text-foreground selection:bg-accent/75 selection:text-background;
+    @apply flex min-h-svh flex-col font-app text-foreground selection:bg-accent/75 selection:text-background relative overflow-x-hidden;
+    background-color: var(--background);
   }
+  
+  /* Premium Mesh Gradient Background */
+  body::before {
+    content: "";
+    @apply fixed inset-0 -z-10 opacity-30 dark:opacity-20 pointer-events-none;
+    background: 
+      radial-gradient(circle at 0% 0%, var(--accent) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, var(--accent) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, #4facfe 0%, transparent 50%);
+    filter: blur(80px);
+  }
+
   a,
   button {
-    @apply outline-offset-1 outline-accent focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
+    @apply transition-all duration-300 outline-offset-1 outline-accent focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
@@ -51,20 +64,37 @@ html[data-theme="dark"] {
   }
 }
 
-@utility max-w-app {
-  @apply max-w-3xl;
+/* Glassmorphism Utility */
+@utility glass {
+  @apply bg-background/70 backdrop-blur-md border border-white/10 shadow-lg;
 }
 
 @utility app-layout {
-  @apply mx-auto w-full max-w-app px-4;
+  @apply mx-auto w-full max-w-4xl px-6;
+}
+
+@utility app-prose {
+  @apply prose prose-invert max-w-none;
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--accent);
+  --tw-prose-links: var(--accent);
 }
 
 .active-nav {
-  @apply underline decoration-wavy decoration-2 underline-offset-8;
+  @apply font-bold text-accent;
+  position: relative;
 }
 
-/* Source: https://piccalil.li/blog/a-more-modern-css-reset/ */
-/* Anything that has been anchored to should have extra scroll margin */
+.active-nav::after {
+  content: "";
+  @apply absolute -bottom-1 left-0 h-0.5 w-full bg-accent scale-x-100;
+}
+
 :target {
-  scroll-margin-block: 1rem;
+  scroll-margin-block: 2rem;
+}
+
+/* Base Card Style */
+.card-hover {
+  @apply transition-all duration-350 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accent/10;
 }

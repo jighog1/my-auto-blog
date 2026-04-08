@@ -9,6 +9,8 @@ import EditPost from "@/components/EditPost.astro";
 import ShareLinks from "@/components/ShareLinks.astro";
 import BackButton from "@/components/BackButton.astro";
 import BackToTopButton from "@/components/BackToTopButton.astro";
+import TableOfContents from "@/components/TableOfContents.astro";
+import RelatedPosts from "@/components/RelatedPosts.astro";
 import { getPath } from "@/utils/getPath";
 import { slugifyStr } from "@/utils/slugify";
 import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
@@ -69,97 +71,98 @@ const layoutProps = {
 
 /* ========== Prev/Next Posts ========== */
 
-const allPosts = posts.map(({ data: { title }, id, filePath }) => ({
+const allPostsForNav = posts.map(({ data: { title }, id, filePath }) => ({
   id,
   title,
   filePath,
 }));
 
-const currentPostIndex = allPosts.findIndex(a => a.id === post.id);
+const currentPostIndex = allPostsForNav.findIndex(a => a.id === post.id);
 
-const prevPost = currentPostIndex !== 0 ? allPosts[currentPostIndex - 1] : null;
+const prevPost = currentPostIndex !== 0 ? allPostsForNav[currentPostIndex - 1] : null;
 const nextPost =
-  currentPostIndex !== allPosts.length ? allPosts[currentPostIndex + 1] : null;
+  currentPostIndex !== allPostsForNav.length - 1 ? allPostsForNav[currentPostIndex + 1] : null;
+
 ---
 
 <Layout {...layoutProps}>
   <Header />
-  <BackButton />
-  <main
-    id="main-content"
-    class:list={["app-layout pb-12", { "mt-8": !SITE.showBackButton }]}
-    data-pagefind-body
-  >
-    <h1
-      transition:name={slugifyStr(title.replaceAll(".", "-"))}
-      class="inline-block text-2xl font-bold text-accent sm:text-3xl"
+  <div class="app-layout">
+    <BackButton />
+    <main
+      id="main-content"
+      class:list={["pb-12 mt-8", { "mt-16": !SITE.showBackButton }]}
+      data-pagefind-body
     >
-      {title}
-    </h1>
-    <div class="my-2 flex items-center gap-2">
-      <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
-      <span
-        aria-hidden="true"
-        class:list={[
-          "max-sm:hidden",
-          { hidden: !SITE.editPost.enabled || hideEditPost },
-        ]}>|</span
-      >
-      <EditPost {hideEditPost} {post} class="max-sm:hidden" />
-    </div>
-    <article
-      id="article"
-      class="app-prose mt-8 w-full max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
-    >
-      <Content />
-    </article>
+      <div class="grid grid-cols-1 gap-12 lg:grid-cols-4">
+        <!-- Main Article Content -->
+        <div class="lg:col-span-3">
+          <header class="mb-8">
+            <h1
+              transition:name={slugifyStr(title.replaceAll(".", "-"))}
+              class="text-3xl font-extrabold text-accent sm:text-4xl"
+            >
+              {title}
+            </h1>
+            <div class="mt-4 flex flex-wrap items-center gap-4 text-sm opacity-85">
+              <span class="font-bold text-accent">By {author}</span>
+              <span class="opacity-50">|</span>
+              <Datetime {pubDatetime} {modDatetime} {timezone} />
+            </div>
+            
+            {ogImageUrl && (
+              <div class="mt-8 overflow-hidden rounded-2xl shadow-xl">
+                <img src={ogImageUrl} alt={title} class="w-full object-cover max-h-[400px]" />
+              </div>
+            )}
+          </header>
 
-    <hr class="my-8 border-dashed" />
+          <article
+            id="article"
+            class="app-prose w-full prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
+          >
+            <Content />
+          </article>
 
-    <EditPost class="sm:hidden" {hideEditPost} {post} />
+          <footer class="mt-16 border-t border-dashed border-border pt-8">
+            <ul class="flex flex-wrap gap-3">
+              {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
+            </ul>
+            
+            <ShareLinks />
+            
+            <RelatedPosts currentPost={post} allPosts={posts} />
 
-    <ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8">
-      {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
-    </ul>
+            <!-- Previous/Next Navigation -->
+            <div class="mt-12 grid grid-cols-1 gap-6 border-t border-border pt-8 sm:grid-cols-2">
+              {prevPost && (
+                <a href={getPath(prevPost.id, prevPost.filePath)} class="group flex gap-3 rounded-xl border border-transparent p-4 transition-all hover:bg-accent/5 hover:border-accent/10">
+                  <IconChevronLeft class="mt-1 h-5 w-5 flex-none transition-transform group-hover:-translate-x-1" />
+                  <div>
+                    <span class="text-xs uppercase tracking-widest opacity-60">이전 글</span>
+                    <div class="font-bold text-accent">{prevPost.title}</div>
+                  </div>
+                </a>
+              )}
+              {nextPost && (
+                <a href={getPath(nextPost.id, nextPost.filePath)} class="group col-start-2 flex justify-end gap-3 rounded-xl border border-transparent p-4 text-end transition-all hover:bg-accent/5 hover:border-accent/10">
+                  <div>
+                    <span class="text-xs uppercase tracking-widest opacity-60">다음 글</span>
+                    <div class="font-bold text-accent">{nextPost.title}</div>
+                  </div>
+                  <IconChevronRight class="mt-1 h-5 w-5 flex-none transition-transform group-hover:translate-x-1" />
+                </a>
+              )}
+            </div>
+          </footer>
+        </div>
 
+        <!-- Sidebar (Table of Contents) -->
+        <TableOfContents className="lg:col-span-1" />
+      </div>
+    </main>
     <BackToTopButton />
-
-    <ShareLinks />
-
-    <hr class="my-6 border-dashed" />
-
-    <!-- Previous/Next Post Buttons -->
-    <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      {
-        prevPost && (
-          <a
-            href={getPath(prevPost.id, prevPost.filePath)}
-            class="flex w-full gap-1 hover:opacity-75"
-          >
-            <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
-            <div>
-              <span>Previous Post</span>
-              <div class="text-sm text-accent/85">{prevPost.title}</div>
-            </div>
-          </a>
-        )
-      }
-      {
-        nextPost && (
-          <a
-            href={getPath(nextPost.id, nextPost.filePath)}
-            class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
-          >
-            <div>
-              <span>Next Post</span>
-              <div class="text-sm text-accent/85">{nextPost.title}</div>
-            </div>
-            <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
-          </a>
-        )
-      }
-    </div>
-  </main>
+  </div>
   <Footer />
 </Layout>
 

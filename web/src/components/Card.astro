@@ -10,24 +10,48 @@ type Props = {
 
 const { variant: Heading = "h2", id, data, filePath } = Astro.props;
 
-const { title, description, ...props } = data;
+const { title, description, author, ogImage, ...props } = data;
+
+// ogImage가 문자열이면 그대로 사용, 객체면 src 사용
+const thumbnailUrl = typeof ogImage === "string" ? ogImage : ogImage?.src;
 ---
 
-<li class="my-6">
+<li class="group card-hover glass my-8 overflow-hidden rounded-2xl">
   <a
     href={getPath(id, filePath)}
-    class:list={[
-      "inline-block text-lg font-medium text-accent",
-      "decoration-dashed underline-offset-4 hover:underline",
-      "focus-visible:no-underline focus-visible:underline-offset-0",
-    ]}
+    class="grid gap-6 p-4 sm:grid-cols-5 sm:p-6"
   >
-    <Heading
-      style={{ viewTransitionName: slugifyStr(title.replaceAll(".", "-")) }}
-    >
-      {title}
-    </Heading>
+    {thumbnailUrl && (
+      <div class="sm:col-span-2 overflow-hidden rounded-lg">
+        <img 
+          src={thumbnailUrl} 
+          alt={title} 
+          class="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-110 sm:h-full"
+        />
+      </div>
+    )}
+    <div class:list={["flex flex-col justify-center", thumbnailUrl ? "sm:col-span-3" : "sm:col-span-5"]}>
+      <Heading
+        transition:name={slugifyStr(title.replaceAll(".", "-"))}
+        class="text-xl font-bold text-accent transition-colors duration-300 group-hover:text-foreground sm:text-2xl"
+      >
+        {title}
+      </Heading>
+      
+      <div class="mt-2 flex items-center gap-3 text-sm opacity-80">
+        <span class="font-medium text-accent">By {author}</span>
+        <span class="text-muted text-xs">|</span>
+        <Datetime {...props} />
+      </div>
+
+      <p class="mt-4 line-clamp-2 text-sm leading-relaxed opacity-90">
+        {description}
+      </p>
+      
+      <div class="mt-6 flex items-center gap-2 text-sm font-semibold text-accent opacity-0 transition-all duration-300 group-hover:translate-x-2 group-hover:opacity-100">
+        Read More
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </div>
+    </div>
   </a>
-  <Datetime {...props} />
-  <p>{description}</p>
 </li>
