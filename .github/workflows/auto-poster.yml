@@ -2,8 +2,8 @@ name: Auto Blog Poster
 
 on:
   schedule:
-    # 매일 UTC 자정(KST 오전 9시) 실행
-    - cron: '0 0 * * *'
+    # 매일 UTC 22:00(KST 오전 7시) 실행
+    - cron: '0 22 * * *'
   # 터미널이나 GitHub 화면에서 수동으로도 돌릴 수 있게
   workflow_dispatch: 
 

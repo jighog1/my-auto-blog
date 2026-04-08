@@ -18,10 +18,10 @@
     background-color: var(--background);
   }
   
-  /* Very Subtle Decorative Sparkle */
+  /* Very Subtle Decorative Sparkle - Disabled in Dark to prevent Oatmeal feel */
   body::before {
     content: "";
-    @apply fixed inset-0 -z-10 opacity-20 dark:opacity-10 pointer-events-none;
+    @apply fixed inset-0 -z-10 opacity-10 dark:hidden pointer-events-none;
     background-image: 
       radial-gradient(at 0% 0%, var(--accent) 0, transparent 40%), 
       radial-gradient(at 100% 100%, #4facfe 0, transparent 40%);

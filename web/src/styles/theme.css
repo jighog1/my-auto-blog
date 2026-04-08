@@ -10,7 +10,7 @@ html[data-theme="dark"] {
   --background: #1e1e1e; /* VS Code Default Dark */
   --foreground: #d4d4d4; /* VS Code Soft White */
   --accent: #3794ef;    /* VS Code Dark Blue */
-  --muted: #252526;
+  --muted: #2a2d2e;     /* VS Code Dark Muted */
   --border: #333333;
 }
 
