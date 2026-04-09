@@ -10,18 +10,18 @@ from google import genai
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 BLOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../web/src/data/blog'))
 
-# 카테고리 정의 및 검색 키워드 (시사, 경제, 과학, 인문 등 대폭 확장)
+# 카테고리 정의 및 고도화된 검색 쿼리
 CATEGORIES = {
-    "IT/기술 트렌드": "IT 트렌드 소프트웨어 신기술",
-    "정보보안 이슈": "사이버 보안 해킹 이슈 데이터 유출",
-    "AI 및 자동화": "인공지능 생성형 AI 대규모언어모델",
-    "글로벌 경제/비즈니스": "세계 경제 금리 주식 경영 인사이트",
-    "사회/정치 이슈": "국내외 주요 정치 사회 이슈 시사 트렌드",
-    "과학/우주 탐사": "최신 과학 발견 우주 탐사 양자 역학",
-    "환경/신재생 에너지": "기후 위기 신재생 에너지 친환경 기술",
-    "인문학/철학/심리": "인문학 통찰 철학적 사고 심리학 트렌드",
-    "문화/예술/라이프": "베스트셀러 전시회 라이프스타일 트렌드",
-    "상식/교양": "알아두면 좋은 상식 역사적 사건 세계사"
+    "IT/기술 트렌드": "최신 IT 트렌드 차세대 소프트웨어 기술 동향",
+    "정보보안 이슈": "사이버 보안 위협 해킹 사고 분석 보안 기술 트렌드",
+    "AI 및 자동화": "인공지능 산업 적용 사례 생성형 AI 기술 혁신 도구",
+    "글로벌 경제/비즈니스": "세계 경제 지표 금리 변동 시장 분석 경영 인사이트",
+    "사회/정치 이슈": "국내외 주요 정치 사회 이슈 정책 변화 시사 분석",
+    "과학/우주 탐사": "최신 과학 기술 발견 우주 탐사 프로젝트 양자 컴퓨팅",
+    "환경/신재생 에너지": "탄소 중립 신재생 에너지 기술 기후 위기 대응책",
+    "인문학/철학/심리": "인문학적 통찰 현대 철학 심리학 트렌드 행동 경제학",
+    "문화/예술/라이프": "글로벌 문화 트렌드 예술 시장 라이프스타일 혁신",
+    "상식/교양": "역사적 사건 배경 지식 세계사 상식 교양 인사이트"
 }
 
 def fetch_trend_news(category):
@@ -127,110 +127,106 @@ def get_best_model_list(client):
         return ["gemini-2.0-flash", "gemini-1.5-flash"]
 
 def generate_blog_post_v2(category, news_list, recent_titles=None):
-    """수집된 여러 뉴스 정보를 종합하여 독창적인 제목, 이미지 프롬프트, 본문을 작성합니다."""
+    """수집된 뉴스 정보를 바탕으로 전문가급 인사이트가 담긴 제목, 요약, 태그, 본문을 작성합니다."""
     if not GEMINI_API_KEY:
         print("GEMINI_API_KEY 환경 변수가 없습니다. 작업 중단.")
-        return None, None, None
+        return None, None, None, None, None
 
     client = genai.Client()
-    
-    # 실시간 가용 모델 리스트 확보
     model_candidates = get_best_model_list(client)
     
     news_context = "\n".join([f"- {n}" for n in news_list])
     history_context = "\n".join([f"- {t}" for t in recent_titles]) if recent_titles else "없음"
     
     prompt = f"""
-    당신은 "{category}" 분야의 전문 콘텐츠 에디터이자 전략적 블로거입니다. 
-    제시된 여러 최신 뉴스 정보를 바탕으로 독자들에게 강력한 통찰을 제공하는 '오리지널' 블로그 포스트를 작성하세요.
+    당신은 "{category}" 분야의 **수석 전략 컨설턴트이자 전문 기술 블로거**입니다. 
+    단순한 뉴스 요약을 넘어, 시장의 흐름을 분석하고 독자에게 실질적인 비즈니스/기술적 통찰을 제공하는 고품질 포스트를 작성하십시오.
 
-    [최근 포스팅된 주제들 (중복 피하기)]
+    [최근 포스팅 내역 (중복 및 유사 주제 절대 지양)]
     {history_context}
 
-    [참고할 최신 뉴스 소스들]
+    [분석할 최신 뉴스 소스]
     {news_context}
 
-    [필수 작성 및 구성 가이드라인]
-    1. 중복 및 표절 방지:
-       - **뉴스 헤드라인을 절대 제목으로 그대로 사용하지 마십시오.**
-       - 최근 주제들과 겹치지 않는 새로운 시각을 제공하십시오.
+    [작성 가이드라인]
+    1. **전문적 페르소나**: 독자가 현업 전문가라고 가정하고, 분석적이고 설득력 있는 논조를 유지하십시오. 
+    2. **글의 구조**: PAS(Problem-Agitate-Solve) 프레임워크를 기반으로 하되, 'Solve' 단계에서 당신만의 독창적인 미래 전망이나 대응 전략을 포함하십시오.
+    3. **정체성 명시**: 글의 성격을 한눈에 알 수 있도록 상단 메타데이터를 정교하게 작성하십시오.
+    4. **가독성**: 1~2문장 단위로 문단을 나누고, 불릿 포인트를 사용하여 복잡한 정보를 시각적으로 구조화하십시오.
+    5. **이미지**: 주제를 관통하는 예술적이고 상징적인 3D 렌더링 또는 디지털 아트용 영문 프롬프트를 생성하십시오.
+    6. **Mermaid**: 시스템 아키텍처, 벨류 체인, 또는 프로세스 흐름을 설명할 수 있다면 반드시 `mermaid` 다이어그램을 삽입하십시오.
 
-    2. 이미지 및 멀티미디어:
-       - **이미지 생성 프롬프트**: 글의 주제를 시각적으로 완벽하게 표현할 수 있는 **상세한 영문 묘사(Prompt)**를 작성하십시오.
-       - **스타일 가이드**: '3D render', 'Cinematic lighting', 'Photorealistic but artistic', 'High resolution', 'Digital art'와 같은 키워드를 포함하여 세련된 이미지가 생성되게 하십시오.
-       - **주의**: 단어 나열이 아닌, 하나의 완성된 문장 형태로 묘사하십시오. (예: A futuristic 3D render of a glowing digital brain representing AI networking, deep blue and teal neon colors, 4k resolution)
-       - 결과 상단에 '이미지프롬프트: [상세한 영문 묘사]' 형식으로 명시하십시오.
-       - **Mermaid 다이어그램**: 정보의 구조나 흐름을 시각화할 수 있는 경우, 반드시 `mermaid` 코드 블록을 포함하십시오.
+    [출력 포맷 (반드시 지킬 것)]
+    제목: [주의을 끄는 전문적인 제목]
+    카테고리: {category}
+    요약: [글 전체 내용을 아우르는 핵심 문장 1줄]
+    태그: [본문과 밀접한 영문 태그 3~5개, 콤마로 구분]
+    이미지프롬프트: [상세한 영문 묘사 문장]
 
-    3. PAS(Problem-Agitate-Solve) 방법론 적용 및 본문 작성:
-       - **Solve** 섹션에서 뉴스 기반의 해결책 및 독창적 인사이트를 제공하십시오.
-       - 본문 내 H1 금지. H2(##), H3(###)만 사용.
-       - 문단은 짧게 불릿 포인트를 적극 활용하십시오.
-
-    결과물 형식 예시:
-    제목: [당신이 지은 독창적 제목]
-    이미지키워드: [영문키워드]
-    
-    [본문 내용(Mermaid 다이어그램 포함)...]
+    ---본문 시작---
+    [여기에 PAS 구조의 본문 작성. H2, H3 헤더 사용. 본문 처음에 요약 섹션을 포함하지 마세요 - 저장 로직에서 처리함]
     """
     
     for model_id in model_candidates:
         try:
-            print(f"🚀 인공지능 모델 호출 시도 중: {model_id}...")
+            print(f"🚀 전문가 모드로 콘텐츠 생성 시도 중: {model_id}...")
             response = client.models.generate_content(
                 model=model_id,
                 contents=prompt,
             )
             raw_text = response.text
             
-            # 파싱 및 데이터 추출
+            # 파싱 로직 개선
+            metadata = {
+                "제목": "새로운 트렌드 분석",
+                "요약": "최신 시장 동향과 기술적 통찰을 분석합니다.",
+                "태그": "Trend,Insight",
+                "카테고리": category,
+                "이미지프롬프트": "Abstract digital technology background, 4k"
+            }
+            
+            header_end_idx = 0
             lines = raw_text.strip().split('\n')
-            title = "새로운 트렌드 분석"
-            image_keyword = "technology"
-            content_start_idx = 0
+            for i, line in enumerate(lines[:12]):
+                for key in metadata.keys():
+                    if line.startswith(f"{key}:"):
+                        metadata[key] = line.replace(f"{key}:", "").strip().replace("[", "").replace("]", "")
+                        header_end_idx = i + 1
             
-            # 이미지 프롬프트 추출 로직 고도화
-            header_count = 0
-            for i, line in enumerate(lines[:8]):
-                if line.startswith("제목:"):
-                    title = line.replace("제목:", "").strip()
-                    header_count = i + 1
-                elif line.startswith("이미지프롬프트:"):
-                    image_prompt = line.replace("이미지프롬프트:", "").strip().replace("[", "").replace("]", "")
-                    header_count = i + 1
+            # 본문 추출 (구분선 또는 헤더 이후)
+            body_lines = lines[header_end_idx:]
+            if body_lines and "---본문 시작---" in body_lines[0]:
+                body_lines = body_lines[1:]
             
-            body_text = "\n".join(lines[header_count:]).strip()
+            body_text = "\n".join(body_lines).strip()
             
-            print(f"✨ 모델 {model_id}으로 독창적 콘텐츠 및 시나리오 생성 완료!")
-            return title, image_prompt, body_text
+            print(f"✨ {category} 분야 콘텐츠 생성 완료 (Model: {model_id})")
+            return metadata["제목"], metadata["요약"], metadata["태그"], metadata["카테고리"], metadata["이미지프롬프트"], body_text
+            
         except Exception as e:
-            error_msg = str(e)
-            if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
-                print(f"⚠️ {model_id} 모델 할당량 초과(429). 다음 모델로 넘어갑니다...")
+            if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                 continue
-            elif "404" in error_msg or "NOT_FOUND" in error_msg:
-                print(f"⚠️ {model_id} 모델을 찾을 수 없음(404). 다음 모델을 시도합니다...")
-                continue
-            else:
-                print(f"❌ {model_id} 처리 중 예상치 못한 오류 발생: {e}")
-                continue
+            print(f"❌ {model_id} 오류: {e}")
+            continue
                 
-    print("🚨 모든 가용 모델이 실패했습니다.")
-    return None, None, None
+    return None, None, None, None, None, None
 
 import urllib.parse
 
-def save_post(title, image_prompt, content):
+def save_post(title, summary, tags_str, category, image_prompt, content):
     now = datetime.datetime.now()
     slug = f"auto-post-{now.strftime('%Y%m%d%H%M%S')}"
     
-    # 이미지 프롬프트 URL 인코딩 (공백 및 특수문자 처리)
-    # Pollinations AI는 상세 문장을 인코딩하여 전달할 때 가장 잘 작동함
-    encoded_prompt = urllib.parse.quote(image_prompt) if image_prompt else "technology,futuristic,3d_render"
+    # 태그 처리 (LLM 생성이 불충분할 경우 대비 기본값 포함)
+    tags = [t.strip() for t in tags_str.split(',') if t.strip()]
+    if category not in tags:
+        tags.insert(0, category)
     
-    # Pollinations AI 생성형 이미지 엔진 활용 (무료, 키 불필요)
+    # 이미지 프롬프트 URL 인코딩
+    encoded_prompt = urllib.parse.quote(image_prompt) if image_prompt else "technology,futuristic,3d_render"
     image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
 
+    # 프론트매터 구성
     frontmatter = f"""---
 title: "{title}"
 author: "AI Bot"
@@ -238,35 +234,48 @@ pubDatetime: {now.strftime('%Y-%m-%dT%H:%M:%SZ')}
 featured: false
 draft: false
 tags:
-  - Trend
-  - Automation
-ogImage: "{image_url}"
-description: "{title}에 관한 실시간 트렌드 분석 포스트입니다."
+"""
+    for tag in tags:
+        frontmatter += f"  - {tag}\n"
+        
+    frontmatter += f"""ogImage: "{image_url}"
+description: "{summary}"
 ---
 
 """
+
+    # 본문 상단에 시각적 요약 카드 삽입
+    summary_card = f"""> [!IMPORTANT]
+> **분야**: {category}  
+> **한 줄 요약**: {summary}
+
+---
+
+"""
+    
     filename = os.path.join(BLOG_DIR, f"{slug}.md")
     os.makedirs(BLOG_DIR, exist_ok=True)
     
     with open(filename, 'w', encoding='utf-8') as f:
-        f.write(frontmatter + content)
+        f.write(frontmatter + summary_card + content)
         
-    print(f"새 포스트 저장 완료: {filename} (이미지 프롬프트: {image_prompt})")
+    print(f"✅ 새 포스트 저장 완료: {filename}")
+    print(f"   [분야: {category} | 태그: {', '.join(tags)}]")
 
 if __name__ == "__main__":
-    print("--- 실시간 트렌드 기반 자동화 블로그 봇 가동 ---")
+    print("--- 지능형 실시간 트렌드 미디어 봇 가동 ---")
     
-    # 최근 포스팅 이력 조회 (가장 최신 5개로 확장)
+    # 최근 포스팅 이력 조회 (가장 최신 5개)
     recent_titles = get_recent_posts_info(5)
     
     category, news_list = get_daily_topic_v2(recent_titles)
-    print(f"분야: {category}")
     
     if news_list:
-        print(f"수집된 뉴스 수: {len(news_list)}")
-        title, image_prompt, content = generate_blog_post_v2(category, news_list, recent_titles)
+        print(f"📊 {category} 분야 뉴스 {len(news_list)}건 확보")
+        title, summary, tags, gen_category, image_prompt, content = generate_blog_post_v2(category, news_list, recent_titles)
+        
         if title and content:
-            save_post(title, image_prompt, content)
+            save_post(title, summary, tags, gen_category or category, image_prompt, content)
             print("--- 포스팅 파이프라인 무사히 종료 ---")
         else:
             print("--- 콘텐츠 생성 실패로 종료 ---")
