@@ -127,7 +127,7 @@ def get_best_model_list(client):
         return ["gemini-2.0-flash", "gemini-1.5-flash"]
 
 def generate_blog_post_v2(category, news_list, recent_titles=None):
-    """수집된 여러 뉴스 정보를 종합하여 독창적인 제목, 이미지 키워드, 본문을 작성합니다."""
+    """수집된 여러 뉴스 정보를 종합하여 독창적인 제목, 이미지 프롬프트, 본문을 작성합니다."""
     if not GEMINI_API_KEY:
         print("GEMINI_API_KEY 환경 변수가 없습니다. 작업 중단.")
         return None, None, None
@@ -156,10 +156,10 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
        - 최근 주제들과 겹치지 않는 새로운 시각을 제공하십시오.
 
     2. 이미지 및 멀티미디어:
-       - **이미지 키워드**: 글의 분위기에 맞는 **영문 키워드 3~5개**를 선정하십시오. 
-       - **주의**: 키워드는 반드시 콤마(,)로 구분하여 한 줄로 작성하십시오. (예: AI,illustration,futuristic,blue)
-       - 실사 사진보다는 주제와 어울리는 **'Illustration', '3D render', 'Minimalist'** 스타일이 포함되도록 하십시오.
-       - 결과 상단에 '이미지키워드: [키워드1,키워드2...]' 형식으로 명시하십시오.
+       - **이미지 생성 프롬프트**: 글의 주제를 시각적으로 완벽하게 표현할 수 있는 **상세한 영문 묘사(Prompt)**를 작성하십시오.
+       - **스타일 가이드**: '3D render', 'Cinematic lighting', 'Photorealistic but artistic', 'High resolution', 'Digital art'와 같은 키워드를 포함하여 세련된 이미지가 생성되게 하십시오.
+       - **주의**: 단어 나열이 아닌, 하나의 완성된 문장 형태로 묘사하십시오. (예: A futuristic 3D render of a glowing digital brain representing AI networking, deep blue and teal neon colors, 4k resolution)
+       - 결과 상단에 '이미지프롬프트: [상세한 영문 묘사]' 형식으로 명시하십시오.
        - **Mermaid 다이어그램**: 정보의 구조나 흐름을 시각화할 수 있는 경우, 반드시 `mermaid` 코드 블록을 포함하십시오.
 
     3. PAS(Problem-Agitate-Solve) 방법론 적용 및 본문 작성:
@@ -189,20 +189,20 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
             image_keyword = "technology"
             content_start_idx = 0
             
-            # 제목 및 이미지 키워드 추출 로직
+            # 이미지 프롬프트 추출 로직 고도화
             header_count = 0
-            for i, line in enumerate(lines[:5]):
+            for i, line in enumerate(lines[:8]):
                 if line.startswith("제목:"):
                     title = line.replace("제목:", "").strip()
                     header_count = i + 1
-                elif line.startswith("이미지키워드:"):
-                    image_keyword = line.replace("이미지키워드:", "").strip().replace("[", "").replace("]", "")
+                elif line.startswith("이미지프롬프트:"):
+                    image_prompt = line.replace("이미지프롬프트:", "").strip().replace("[", "").replace("]", "")
                     header_count = i + 1
             
             body_text = "\n".join(lines[header_count:]).strip()
             
             print(f"✨ 모델 {model_id}으로 독창적 콘텐츠 및 시나리오 생성 완료!")
-            return title, image_keyword, body_text
+            return title, image_prompt, body_text
         except Exception as e:
             error_msg = str(e)
             if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
@@ -220,16 +220,16 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
 
 import urllib.parse
 
-def save_post(title, image_keyword, content):
+def save_post(title, image_prompt, content):
     now = datetime.datetime.now()
     slug = f"auto-post-{now.strftime('%Y%m%d%H%M%S')}"
     
-    # 이미지 키워드 URL 인코딩 (공백 및 특수문자 처리)
-    # quote_plus를 사용하여 공백을 +로 변환 (더 표준적인 URL 방식)
-    encoded_keyword = urllib.parse.quote_plus(image_keyword) if image_keyword else "technology"
+    # 이미지 프롬프트 URL 인코딩 (공백 및 특수문자 처리)
+    # Pollinations AI는 상세 문장을 인코딩하여 전달할 때 가장 잘 작동함
+    encoded_prompt = urllib.parse.quote(image_prompt) if image_prompt else "technology,futuristic,3d_render"
     
-    # LoremFlickr 검색 리다이렉트 활용
-    image_url = f"https://loremflickr.com/1200/630/{encoded_keyword}"
+    # Pollinations AI 생성형 이미지 엔진 활용 (무료, 키 불필요)
+    image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1200&height=630&nologo=true"
 
     frontmatter = f"""---
 title: "{title}"
@@ -251,7 +251,7 @@ description: "{title}에 관한 실시간 트렌드 분석 포스트입니다."
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(frontmatter + content)
         
-    print(f"새 포스트 저장 완료: {filename} (이미지 키워드: {image_keyword})")
+    print(f"새 포스트 저장 완료: {filename} (이미지 프롬프트: {image_prompt})")
 
 if __name__ == "__main__":
     print("--- 실시간 트렌드 기반 자동화 블로그 봇 가동 ---")
@@ -264,9 +264,9 @@ if __name__ == "__main__":
     
     if news_list:
         print(f"수집된 뉴스 수: {len(news_list)}")
-        title, image_keyword, content = generate_blog_post_v2(category, news_list, recent_titles)
+        title, image_prompt, content = generate_blog_post_v2(category, news_list, recent_titles)
         if title and content:
-            save_post(title, image_keyword, content)
+            save_post(title, image_prompt, content)
             print("--- 포스팅 파이프라인 무사히 종료 ---")
         else:
             print("--- 콘텐츠 생성 실패로 종료 ---")
