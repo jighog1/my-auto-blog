@@ -235,10 +235,19 @@ def save_post(title, summary, tags_str, category, image_prompt, content):
     now = datetime.datetime.now()
     slug = f"auto-post-{now.strftime('%Y%m%d%H%M%S')}"
     
-    # 태그 처리 (LLM 생성이 불충분할 경우 대비 기본값 포함)
-    tags = [t.strip() for t in tags_str.split(',') if t.strip()]
-    if category not in tags:
-        tags.insert(0, category)
+    # 태그 처리 및 정제 (YAML 예약어 및 빈 문자열 방어)
+    raw_tags = [t.strip().replace('"', '').replace("'", "") for t in tags_str.split(',') if t.strip()]
+    cleaned_tags = []
+    for tag in raw_tags:
+        # 너무 짧거나 특수기호만 있는 경우 제외
+        if len(tag) > 1 and not tag.startswith('-'):
+            cleaned_tags.append(tag)
+            
+    if category not in cleaned_tags:
+        cleaned_tags.insert(0, category)
+    
+    # 중복 제거 및 최종 리스트 (최대 6개)
+    final_tags = list(dict.fromkeys(cleaned_tags))[:6]
     
     # 이미지 프롬프트 URL 인코딩
     encoded_prompt = urllib.parse.quote(image_prompt) if image_prompt else "technology,futuristic,3d_render"
@@ -253,8 +262,9 @@ featured: false
 draft: false
 tags:
 """
-    for tag in tags:
-        frontmatter += f"  - {tag}\n"
+    for tag in final_tags:
+        # 안전을 위해 모든 태그를 이중 따옴표로 감쌈
+        frontmatter += f'  - "{tag}"\n'
         
     frontmatter += f"""ogImage: "{image_url}"
 description: "{summary}"
