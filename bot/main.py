@@ -10,17 +10,23 @@ from google import genai
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 BLOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../web/src/data/blog'))
 
-# 카테고리 정의 및 검색 키워드
+# 카테고리 정의 및 검색 키워드 (시사, 경제, 과학, 인문 등 대폭 확장)
 CATEGORIES = {
-    "IT/기술 트렌드": "IT 트렌드 소프트웨어 기술",
-    "정보보안 이슈": "사이버 보안 해킹 이슈",
-    "AI 및 자동화": "인공지능 생성형 AI",
-    "경제 및 비즈니스": "경제 트렌드 비즈니스 인사이트"
+    "IT/기술 트렌드": "IT 트렌드 소프트웨어 신기술",
+    "정보보안 이슈": "사이버 보안 해킹 이슈 데이터 유출",
+    "AI 및 자동화": "인공지능 생성형 AI 대규모언어모델",
+    "글로벌 경제/비즈니스": "세계 경제 금리 주식 경영 인사이트",
+    "사회/정치 이슈": "국내외 주요 정치 사회 이슈 시사 트렌드",
+    "과학/우주 탐사": "최신 과학 발견 우주 탐사 양자 역학",
+    "환경/신재생 에너지": "기후 위기 신재생 에너지 친환경 기술",
+    "인문학/철학/심리": "인문학 통찰 철학적 사고 심리학 트렌드",
+    "문화/예술/라이프": "베스트셀러 전시회 라이프스타일 트렌드",
+    "상식/교양": "알아두면 좋은 상식 역사적 사건 세계사"
 }
 
 def fetch_trend_news(category):
     """지정한 카테고리의 최신 뉴스 제목 3개를 가져옵니다."""
-    query = CATEGORIES.get(category, "최신 기술")
+    query = CATEGORIES.get(category, "최신 트렌드")
     encoded_query = urllib.parse.quote(query)
     # Google News RSS URL
     url = f"https://news.google.com/rss/search?q={encoded_query}&hl=ko&gl=KR&ceid=KR:ko"
@@ -40,17 +46,35 @@ def fetch_trend_news(category):
         print(f"뉴스 수집 중 오류 발생: {e}")
         return []
 
-def get_daily_topic_v2():
-    """랜덤하게 카테고리를 정하고 해당 분야의 뉴스를 수집하여 주제를 도출합니다."""
-    category = random.choice(list(CATEGORIES.keys()))
-    news_list = fetch_trend_news(category)
+def get_daily_topic_v2(recent_titles=None):
+    """최근 작성된 포스트 제목들을 분석하여 겹치지 않는 카테고리를 우선 선정하고 뉴스를 수집합니다."""
+    all_categories = list(CATEGORIES.keys())
+    eligible_categories = all_categories.copy()
+    
+    # 최근 3~5개 포스트 제목에서 키워드를 추출하여 최근 사용된 카테고리를 추측
+    if recent_titles:
+        recent_context = " ".join(recent_titles)
+        # 간단한 매칭으로 최근 카테고리 제외 시도
+        for cat, keywords in CATEGORIES.items():
+            # 카테고리 이름이나 키워드 중 일부가 최근 제목에 포함되어 있다면 제외 후보
+            main_keywords = keywords.split()[:2] + [cat.split("/")[0]]
+            for wk in main_keywords:
+                if wk in recent_context:
+                    if cat in eligible_categories and len(eligible_categories) > 3:
+                        eligible_categories.remove(cat)
+                        print(f"🚫 최근 주제와 겹칠 가능성이 있어 '{cat}' 제외")
+                    break
+
+    # 필터링된 카테고리 중 랜덤 선택, 필터링 후 남은게 너무 적으면 전체에서 선택
+    selected_category = random.choice(eligible_categories)
+    print(f"🎯 선정된 카테고리: {selected_category}")
+    
+    news_list = fetch_trend_news(selected_category)
     
     if not news_list:
-        return category, "최신 트렌드 분석", []
+        return selected_category, ["최신 " + selected_category + " 트렌드 분석"]
     
-    # 첫 번째 뉴스 제목을 기반으로 주제를 생성하거나 뉴스 리스트 자체를 반환
-    main_news = news_list[0].split(" - ")[0] # 언론사 이름 제거 시도
-    return category, news_list
+    return selected_category, news_list
 
 def get_recent_posts_info(count=3):
     """최근 작성된 포스트들의 제목을 가져와 중복을 피하기 위한 정보로 활용합니다."""
@@ -232,10 +256,10 @@ description: "{title}에 관한 실시간 트렌드 분석 포스트입니다."
 if __name__ == "__main__":
     print("--- 실시간 트렌드 기반 자동화 블로그 봇 가동 ---")
     
-    # 최근 포스팅 이력 조회 (가장 최신 3개)
-    recent_titles = get_recent_posts_info(3)
+    # 최근 포스팅 이력 조회 (가장 최신 5개로 확장)
+    recent_titles = get_recent_posts_info(5)
     
-    category, news_list = get_daily_topic_v2()
+    category, news_list = get_daily_topic_v2(recent_titles)
     print(f"분야: {category}")
     
     if news_list:
