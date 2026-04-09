@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@reference "./theme.css";
-@plugin "@tailwindcss/typography";
+@import "./theme.css";
+@import "@tailwindcss/typography";
 
 @layer base {
   /* ===== Override default Tailwind Typography styles ===== */
