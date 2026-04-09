@@ -139,44 +139,64 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
     history_context = "\n".join([f"- {t}" for t in recent_titles]) if recent_titles else "없음"
     
     prompt = f"""
-    당신은 "{category}" 분야의 **수석 전략 컨설턴트이자 전문 기술 블로거**입니다. 
-    단순한 뉴스 요약을 넘어, 시장의 흐름을 분석하고 독자에게 실질적인 비즈니스/기술적 통찰을 제공하는 고품질 포스트를 작성하십시오.
+<instructions>
+당신은 "{category}" 분야의 **수석 전략 컨설턴트 및 전문 기술 미디어 편집자**입니다. 
+제공된 뉴스를 바탕으로 독창적인 통찰이 담긴 블로그 포스트를 작성하십시오.
+반드시 다음 단계를 거쳐 출력을 생성하십시오:
 
-    [최근 포스팅 내역 (중복 및 유사 주제 절대 지양)]
-    {history_context}
+1. **사고 과정 (<thinking>)**: 최종 결과물을 내기 전, 뉴스 데이터의 핵심 가치, 최근 포스팅과의 차별점, 그리고 독자에게 줄 수 있는 전략적 조언을 논리적으로 추론하십시오.
+2. **최종 출력**: 사고 과정을 바탕으로 제목, 요약, 태그, 카테고리, 이미지프롬프트, 그리고 PAS 구조의 본문을 작성하십시오.
+</instructions>
 
-    [분석할 최신 뉴스 소스]
-    {news_context}
+<context>
+[최근 포스팅 내역 (중복 방지)]
+{history_context}
+</context>
 
-    [작성 가이드라인]
-    1. **전문적 페르소나**: 독자가 현업 전문가라고 가정하고, 분석적이고 설득력 있는 논조를 유지하십시오. 
-    2. **글의 구조**: PAS(Problem-Agitate-Solve) 프레임워크를 기반으로 하되, 'Solve' 단계에서 당신만의 독창적인 미래 전망이나 대응 전략을 포함하십시오.
-    3. **정체성 명시**: 글의 성격을 한눈에 알 수 있도록 상단 메타데이터를 정교하게 작성하십시오.
-    4. **가독성**: 1~2문장 단위로 문단을 나누고, 불릿 포인트를 사용하여 복잡한 정보를 시각적으로 구조화하십시오.
-    5. **이미지**: 주제를 관통하는 예술적이고 상징적인 3D 렌더링 또는 디지털 아트용 영문 프롬프트를 생성하십시오.
-    6. **Mermaid**: 시스템 아키텍처, 벨류 체인, 또는 프로세스 흐름을 설명할 수 있다면 반드시 `mermaid` 다이어그램을 삽입하십시오.
+<input>
+[분석할 최신 뉴스 소스]
+{news_context}
+</input>
 
-    [출력 포맷 (반드시 지킬 것)]
-    제목: [주의을 끄는 전문적인 제목]
-    카테고리: {category}
-    요약: [글 전체 내용을 아우르는 핵심 문장 1줄]
-    태그: [본문과 밀접한 영문 태그 3~5개, 콤마로 구분]
-    이미지프롬프트: [상세한 영문 묘사 문장]
+<examples>
+제목: AI 에이전트의 시대: 단순 자동화를 넘어 자율적 비즈니스 파트너로
+카테고리: AI 및 자동화
+요약: 생성형 AI가 단순 도구를 넘어 의사결정과 실행을 독립적으로 수행하는 에이전트로 진화하고 있습니다.
+태그: AI,Agent,Automation,Future,Business
+이미지프롬프트: A cinematic 3D render of a futuristic robot hand shaking a human hand, glowing circuit patterns, soft professional lighting, 4k.
+---본문 시작---
+[PAS 구조의 고품질 콘텐츠...]
+</examples>
 
-    ---본문 시작---
-    [여기에 PAS 구조의 본문 작성. H2, H3 헤더 사용. 본문 처음에 요약 섹션을 포함하지 마세요 - 저장 로직에서 처리함]
+[출력 포맷 가이드]
+<thinking>
+이 섹션에서 논리적 추론 과정을 먼저 전개하십시오.
+</thinking>
+
+제목: [제목]
+카테고리: {category}
+요약: [한 줄 요약]
+태그: [태그1, 태그2, 태그3]
+이미지프롬프트: [상세 영문 프롬프트]
+
+---본문 시작---
+[H2, H3 헤더를 사용한 본문 내용 작성]
     """
     
     for model_id in model_candidates:
         try:
-            print(f"🚀 전문가 모드로 콘텐츠 생성 시도 중: {model_id}...")
+            print(f"🚀 글로벌 규칙 규격화 프롬프트 호출 중: {model_id}...")
             response = client.models.generate_content(
                 model=model_id,
                 contents=prompt,
             )
             raw_text = response.text
             
-            # 파싱 로직 개선
+            # 파싱 로직 (Thinking 태그 제외하고 본데이터만 추출)
+            # <thinking>...</thinking> 부분을 제거
+            clean_text = re.sub(r'<thinking>.*?</thinking>', '', raw_text, flags=re.DOTALL).strip()
+            lines = clean_text.split('\n')
+            
             metadata = {
                 "제목": "새로운 트렌드 분석",
                 "요약": "최신 시장 동향과 기술적 통찰을 분석합니다.",
@@ -186,21 +206,19 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
             }
             
             header_end_idx = 0
-            lines = raw_text.strip().split('\n')
-            for i, line in enumerate(lines[:12]):
+            for i, line in enumerate(lines[:15]):
                 for key in metadata.keys():
                     if line.startswith(f"{key}:"):
                         metadata[key] = line.replace(f"{key}:", "").strip().replace("[", "").replace("]", "")
                         header_end_idx = i + 1
             
-            # 본문 추출 (구분선 또는 헤더 이후)
             body_lines = lines[header_end_idx:]
             if body_lines and "---본문 시작---" in body_lines[0]:
                 body_lines = body_lines[1:]
             
             body_text = "\n".join(body_lines).strip()
             
-            print(f"✨ {category} 분야 콘텐츠 생성 완료 (Model: {model_id})")
+            print(f"✨ 글로벌 규칙 기반 콘텐츠 생성 완료!")
             return metadata["제목"], metadata["요약"], metadata["태그"], metadata["카테고리"], metadata["이미지프롬프트"], body_text
             
         except Exception as e:
