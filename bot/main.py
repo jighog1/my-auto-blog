@@ -200,9 +200,13 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
             
             header_end_idx = 0
             for i, line in enumerate(lines[:15]):
+                line = line.strip()
                 for key in metadata.keys():
-                    if line.startswith(f"{key}:"):
-                        metadata[key] = line.replace(f"{key}:", "").strip().replace("[", "").replace("]", "")
+                    # 정규표현식으로 '제목:', '**제목:**', '**제목**: ' 등을 모두 대응
+                    pattern = re.compile(rf"^\*?\*?{key}\*?\*?[:：]\s*(.*)", re.IGNORECASE)
+                    match = pattern.match(line)
+                    if match:
+                        metadata[key] = match.group(1).strip().replace("[", "").replace("]", "")
                         header_end_idx = i + 1
             
             body_lines = lines[header_end_idx:]
