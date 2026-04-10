@@ -298,24 +298,34 @@ description: "{summary}"
         f.write(frontmatter + summary_card + content)
         
     print(f"✅ 새 포스트 저장 완료: {filename}")
-    print(f"   [분야: {category} | 태그: {', '.join(tags)}]")
+    print(f"   [분야: {category} | 태그: {', '.join(final_tags)}]")
 
 if __name__ == "__main__":
-    print("--- 지능형 실시간 트렌드 미디어 봇 가동 (RSS 에디션) ---")
-    
-    # 최근 포스팅 이력 조회 (가장 최신 5개)
-    recent_titles = get_recent_posts_info(5)
-    
-    category, news_context = get_daily_topic_v2(recent_titles)
-    
-    if news_context and "수집된 뉴스가 없습니다" not in news_context:
-        print(f"📊 {category} 분야 전문 데이터 확보 완료")
-        title, summary, tags, gen_category, image_prompt, content = generate_blog_post_v2(category, news_context, recent_titles)
+    try:
+        print("--- 지능형 실시간 트렌드 미디어 봇 가동 (RSS 에디션) ---")
         
-        if title and content:
-            save_post(title, summary, tags, gen_category or category, image_prompt, content)
-            print("--- 포스팅 파이프라인 무사히 종료 ---")
+        # 최근 포스팅 이력 조회 (가장 최신 5개)
+        recent_titles = get_recent_posts_info(5)
+        
+        # 주제 선정 및 뉴스 확보
+        category, news_context = get_daily_topic_v2(recent_titles)
+        
+        if news_context and "수집된 뉴스가 없습니다" not in news_context:
+            print(f"📊 {category} 분야 전문 데이터 확보 완료")
+            print(f"   [선정된 주제 컨텍스트 요약: {news_context[:50]}...]")
+            
+            title, summary, tags, gen_category, image_prompt, content = generate_blog_post_v2(category, news_context, recent_titles)
+            
+            if title and content:
+                print(f"📄 콘텐츠 생성 완료: '{title}' (분량: {len(content)}자)")
+                save_post(title, summary, tags, gen_category or category, image_prompt, content)
+                print("--- 포스팅 파이프라인 무사히 종료 ---")
+            else:
+                print("--- 콘텐츠 생성 실패 (API 또는 파싱 오류) ---")
         else:
-            print("--- 콘텐츠 생성 실패로 종료 ---")
-    else:
-        print("--- 뉴스 수집 실패 또는 데이터 부족으로 종료 ---")
+            print("--- 뉴스 수집 실패 또는 데이터 부족으로 종료 ---")
+            
+    except Exception as e:
+        print(f"🔥 치명적 오류 발생: {e}")
+        import traceback
+        traceback.print_exc()

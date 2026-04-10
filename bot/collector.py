@@ -90,4 +90,7 @@ if __name__ == "__main__":
     # 테스트 실행
     for cat in RSS_FEEDS.keys():
         print(f"=== {cat} 뉴스 테스트 ===")
+        print("--- 하위 목록 모드 ---")
         print(get_formatted_news_context(cat, 2))
+        print("--- 단일 주제 모드 ---")
+        print(get_single_news_context(cat))
