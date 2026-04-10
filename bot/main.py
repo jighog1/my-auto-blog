@@ -5,23 +5,20 @@ import urllib.request
 import xml.etree.ElementTree as ET
 import re
 from google import genai
+import collector
 
 # 환경 변수 및 설정
+from dotenv import load_dotenv
+load_dotenv()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 BLOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../web/src/data/blog'))
 
-# 카테고리 정의 및 고도화된 검색 쿼리
+# 카테고리 정의 (심플한 카테고리로 슬림화)
 CATEGORIES = {
-    "IT/기술 트렌드": "최신 IT 트렌드 차세대 소프트웨어 기술 동향",
-    "정보보안 이슈": "사이버 보안 위협 해킹 사고 분석 보안 기술 트렌드",
-    "AI 및 자동화": "인공지능 산업 적용 사례 생성형 AI 기술 혁신 도구",
-    "글로벌 경제/비즈니스": "세계 경제 지표 금리 변동 시장 분석 경영 인사이트",
-    "사회/정치 이슈": "국내외 주요 정치 사회 이슈 정책 변화 시사 분석",
-    "과학/우주 탐사": "최신 과학 기술 발견 우주 탐사 프로젝트 양자 컴퓨팅",
-    "환경/신재생 에너지": "탄소 중립 신재생 에너지 기술 기후 위기 대응책",
-    "인문학/철학/심리": "인문학적 통찰 현대 철학 심리학 트렌드 행동 경제학",
-    "문화/예술/라이프": "글로벌 문화 트렌드 예술 시장 라이프스타일 혁신",
-    "상식/교양": "역사적 사건 배경 지식 세계사 상식 교양 인사이트"
+    "IT/AI/Security": "긱뉴스 및 해커뉴스 기반 최신 기술 동향",
+    "Coffee": "스페셜티 커피 및 라이프스타일 트렌드",
+    "Wine": "글로벌 와인 시장 및 테이스팅 인사이트",
+    "Whiskey": "위스키 증류소 및 마켓 트렌드"
 }
 
 def fetch_trend_news(category):
@@ -47,34 +44,26 @@ def fetch_trend_news(category):
         return []
 
 def get_daily_topic_v2(recent_titles=None):
-    """최근 작성된 포스트 제목들을 분석하여 겹치지 않는 카테고리를 우선 선정하고 뉴스를 수집합니다."""
+    """최근 작성된 포스트를 분석하여 겹치지 않는 카테고리를 선정하고 고퀄리티 RSS 데이터를 수집합니다."""
     all_categories = list(CATEGORIES.keys())
     eligible_categories = all_categories.copy()
     
-    # 최근 3~5개 포스트 제목에서 키워드를 추출하여 최근 사용된 카테고리를 추측
     if recent_titles:
         recent_context = " ".join(recent_titles)
-        # 간단한 매칭으로 최근 카테고리 제외 시도
-        for cat, keywords in CATEGORIES.items():
-            # 카테고리 이름이나 키워드 중 일부가 최근 제목에 포함되어 있다면 제외 후보
-            main_keywords = keywords.split()[:2] + [cat.split("/")[0]]
-            for wk in main_keywords:
-                if wk in recent_context:
-                    if cat in eligible_categories and len(eligible_categories) > 3:
-                        eligible_categories.remove(cat)
-                        print(f"🚫 최근 주제와 겹칠 가능성이 있어 '{cat}' 제외")
-                    break
+        for cat in all_categories:
+            # 카테고리 이름이 최근 제목에 포함되어 있다면 제외 후보
+            if cat.split("/")[0] in recent_context:
+                if cat in eligible_categories and len(eligible_categories) > 1:
+                    eligible_categories.remove(cat)
+                    print(f"🚫 최근 주제와 겹칠 가능성이 있어 '{cat}' 제외")
 
-    # 필터링된 카테고리 중 랜덤 선택, 필터링 후 남은게 너무 적으면 전체에서 선택
     selected_category = random.choice(eligible_categories)
     print(f"🎯 선정된 카테고리: {selected_category}")
     
-    news_list = fetch_trend_news(selected_category)
+    # collector를 통해 뉴스를 가져옴 (문자열 형태의 컨텍스트)
+    news_context = collector.get_formatted_news_context(selected_category, limit=3)
     
-    if not news_list:
-        return selected_category, ["최신 " + selected_category + " 트렌드 분석"]
-    
-    return selected_category, news_list
+    return selected_category, news_context
 
 def get_recent_posts_info(count=3):
     """최근 작성된 포스트들의 제목을 가져와 중복을 피하기 위한 정보로 활용합니다."""
@@ -130,12 +119,11 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
     """수집된 뉴스 정보를 바탕으로 전문가급 인사이트가 담긴 제목, 요약, 태그, 본문을 작성합니다."""
     if not GEMINI_API_KEY:
         print("GEMINI_API_KEY 환경 변수가 없습니다. 작업 중단.")
-        return None, None, None, None, None
+        return None, None, None, None, None, None
 
     client = genai.Client()
     model_candidates = get_best_model_list(client)
     
-    news_context = "\n".join([f"- {n}" for n in news_list])
     history_context = "\n".join([f"- {t}" for t in recent_titles]) if recent_titles else "없음"
     
     prompt = f"""
@@ -154,8 +142,8 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
 </context>
 
 <input>
-[분석할 최신 뉴스 소스]
-{news_context}
+[분석할 최신 뉴스 소스 및 요약]
+{news_list}
 </input>
 
 <examples>
@@ -291,16 +279,16 @@ description: "{summary}"
     print(f"   [분야: {category} | 태그: {', '.join(tags)}]")
 
 if __name__ == "__main__":
-    print("--- 지능형 실시간 트렌드 미디어 봇 가동 ---")
+    print("--- 지능형 실시간 트렌드 미디어 봇 가동 (RSS 에디션) ---")
     
     # 최근 포스팅 이력 조회 (가장 최신 5개)
     recent_titles = get_recent_posts_info(5)
     
-    category, news_list = get_daily_topic_v2(recent_titles)
+    category, news_context = get_daily_topic_v2(recent_titles)
     
-    if news_list:
-        print(f"📊 {category} 분야 뉴스 {len(news_list)}건 확보")
-        title, summary, tags, gen_category, image_prompt, content = generate_blog_post_v2(category, news_list, recent_titles)
+    if news_context and "수집된 뉴스가 없습니다" not in news_context:
+        print(f"📊 {category} 분야 전문 데이터 확보 완료")
+        title, summary, tags, gen_category, image_prompt, content = generate_blog_post_v2(category, news_context, recent_titles)
         
         if title and content:
             save_post(title, summary, tags, gen_category or category, image_prompt, content)
@@ -308,4 +296,4 @@ if __name__ == "__main__":
         else:
             print("--- 콘텐츠 생성 실패로 종료 ---")
     else:
-        print("--- 뉴스 수집 실패로 종료 ---")
+        print("--- 뉴스 수집 실패 또는 데이터 부족으로 종료 ---")
