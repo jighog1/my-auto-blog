@@ -137,7 +137,7 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
 </instructions>
 
 <style_guidelines>
-- **제목**: 지나치게 추상적이거나 거창한 표현(예: '시대를 흔드는', '역설의 미학' 등)을 피하십시오. 독자가 내용을 즉시 파악할 수 있도록 **이미 알고 있는 키워드 중심의 명료하고 심플한 제목**을 작성하십시오.
+- **제목**: 주제를 관통하면서도 군더더기 없는 **심플한 제목**을 작성하십시오. 거창한 수식어나 추상적인 비유(예: '~의 역설', '시대를 흔드는 ~')는 반드시 배제하십시오. 독자가 무엇에 관한 글인지 1초 만에 파악할 수 있도록 핵심 키워드 위주로 구성하십시오.
 - **분량 및 상세도**: 반드시 **1,500자 이상의 풍부한 분량**으로 작성하십시오. 단순 요약이 아닌, 해당 주제의 배경, 원리, 파급력, 그리고 상세한 하우투(How-to)를 논리적으로 전개하여 '깊이 있는' 정보를 제공하십시오.
 - **주제 집중도**: 제공된 **단 하나의 뉴스 주제**에만 온전히 집중하십시오. 다른 주제를 섞지 말고 해당 테마를 다각도에서 심층 분석하십시오.
 - **본문 구조**: 정보 전달의 효율성을 위해 다음 구조를 따르십시오.
@@ -200,8 +200,8 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
             lines = clean_text.split('\n')
             
             metadata = {
-                "제목": "새로운 트렌드 분석",
-                "요약": "최신 시장 동향과 기술적 통찰을 분석합니다.",
+                "제목": "제목 파싱 실패 (로직 확인 필요)",
+                "요약": "요약 파싱 실패",
                 "태그": "Trend,Insight",
                 "카테고리": category,
                 "이미지프롬프트": "Abstract digital technology background, 4k"
@@ -210,13 +210,17 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
             header_end_idx = 0
             for i, line in enumerate(lines[:15]):
                 line = line.strip()
+                if not line: continue
+                
                 for key in metadata.keys():
-                    # 정규표현식으로 '제목:', '**제목:**', '**제목**: ' 등을 모두 대응
-                    pattern = re.compile(rf"^\*?\*?{key}\*?\*?[:：]\s*(.*)", re.IGNORECASE)
+                    # 정규표현식 보강: 불렛포인트(-, *), 헤더(#), 강조(**) 등을 모두 무시하고 키 검색
+                    pattern = re.compile(rf"^[#\s\-*]*\*?\*?{key}\*?\*?[:：]\s*(.*)", re.IGNORECASE)
                     match = pattern.match(line)
                     if match:
-                        metadata[key] = match.group(1).strip().replace("[", "").replace("]", "")
-                        header_end_idx = i + 1
+                        val = match.group(1).strip().replace("[", "").replace("]", "")
+                        if val:
+                            metadata[key] = val
+                            header_end_idx = i + 1
             
             body_lines = lines[header_end_idx:]
             if body_lines and "---본문 시작---" in body_lines[0]:
