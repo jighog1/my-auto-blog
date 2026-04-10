@@ -128,13 +128,27 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
     
     prompt = f"""
 <instructions>
-당신은 "{category}" 분야의 **수석 전략 컨설턴트 및 전문 기술 미디어 편집자**입니다. 
+당신은 "{category}" 분야의 **수석 전략 컨설턴트 및 전문 기술 미디어 편집자가 결합된 고지능 AI 에디터**입니다. 
 제공된 뉴스를 바탕으로 독창적인 통찰이 담긴 블로그 포스트를 작성하십시오.
 반드시 다음 단계를 거쳐 출력을 생성하십시오:
 
 1. **사고 과정 (<thinking>)**: 최종 결과물을 내기 전, 뉴스 데이터의 핵심 가치, 최근 포스팅과의 차별점, 그리고 독자에게 줄 수 있는 전략적 조언을 논리적으로 추론하십시오.
-2. **최종 출력**: 사고 과정을 바탕으로 제목, 요약, 태그, 카테고리, 이미지프롬프트, 그리고 PAS 구조의 본문을 작성하십시오.
+2. **최종 출력**: 사고 과정을 바탕으로 제목, 요약, 태그, 카테고리, 이미지프롬프트, 그리고 지시사항이 반영된 본문을 작성하십시오.
 </instructions>
+
+<category_specific_instructions>
+분야가 "{category}"임을 고려하여 다음 내용을 본문에 반드시 포함하십시오:
+
+[IT/AI/Security 분야일 경우]
+- 새로운 소프트웨어나 도구가 언급된다면 관련 **GitHub 저장소 링크**를 포함하거나 안내하십시오.
+- 해당 기술의 **핵심 기능 및 설치/사용 방법**을 비크니컬 유저도 이해할 수 있게 요약하십시오.
+- 기술 도입 시의 **기대 효과**와 구체적인 **비즈니스/실무 활용 방안(Use Cases)**을 제시하십시오.
+
+[Hobby(Coffee, Wine, Whiskey) 분야일 경우]
+- 단순 소식을 넘어 전문가 수준의 **테이스팅 노트(향, 맛, 바디감 등)**를 상세히 기술하십시오.
+- 해당 주제를 더 깊게 즐길 수 있는 **전문가 팁(보관법, 페어링, 최적의 음용 온도 등)**을 포함하십시오.
+- 필요한 경우 역사적 배경이나 제조 공정의 특징 등 **깊이 있는 교양 정보**를 곁들이십시오.
+</category_specific_instructions>
 
 <context>
 [최근 포스팅 내역 (중복 방지)]
@@ -146,19 +160,10 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
 {news_list}
 </input>
 
-<examples>
-제목: AI 에이전트의 시대: 단순 자동화를 넘어 자율적 비즈니스 파트너로
-카테고리: AI 및 자동화
-요약: 생성형 AI가 단순 도구를 넘어 의사결정과 실행을 독립적으로 수행하는 에이전트로 진화하고 있습니다.
-태그: AI,Agent,Automation,Future,Business
-이미지프롬프트: A cinematic 3D render of a futuristic robot hand shaking a human hand, glowing circuit patterns, soft professional lighting, 4k.
----본문 시작---
-[PAS 구조의 고품질 콘텐츠...]
-</examples>
-
 [출력 포맷 가이드]
 <thinking>
 이 섹션에서 논리적 추론 과정을 먼저 전개하십시오.
+특히 "{category}"의 특화 지침을 어떻게 반영할지 전략을 세우십시오.
 </thinking>
 
 제목: [제목]
@@ -168,7 +173,7 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
 이미지프롬프트: [상세 영문 프롬프트]
 
 ---본문 시작---
-[H2, H3 헤더를 사용한 본문 내용 작성]
+[H2, H3 헤더를 사용한 본문 내용 작성. 위에 명시된 분야별 특화 지침이 본문 흐름 속에 자연스럽게 녹아들게 하십시오.]
     """
     
     for model_id in model_candidates:
