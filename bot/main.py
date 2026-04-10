@@ -60,8 +60,8 @@ def get_daily_topic_v2(recent_titles=None):
     selected_category = random.choice(eligible_categories)
     print(f"🎯 선정된 카테고리: {selected_category}")
     
-    # collector를 통해 뉴스를 가져옴 (문자열 형태의 컨텍스트)
-    news_context = collector.get_formatted_news_context(selected_category, limit=3)
+    # collector를 통해 단일 뉴스를 가져옴 (문자열 형태의 컨텍스트)
+    news_context = collector.get_single_news_context(selected_category)
     
     return selected_category, news_context
 
@@ -138,9 +138,11 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
 
 <style_guidelines>
 - **제목**: 지나치게 추상적이거나 거창한 표현(예: '시대를 흔드는', '역설의 미학' 등)을 피하십시오. 독자가 내용을 즉시 파악할 수 있도록 **이미 알고 있는 키워드 중심의 명료하고 심플한 제목**을 작성하십시오.
+- **분량 및 상세도**: 반드시 **1,500자 이상의 풍부한 분량**으로 작성하십시오. 단순 요약이 아닌, 해당 주제의 배경, 원리, 파급력, 그리고 상세한 하우투(How-to)를 논리적으로 전개하여 '깊이 있는' 정보를 제공하십시오.
+- **주제 집중도**: 제공된 **단 하나의 뉴스 주제**에만 온전히 집중하십시오. 다른 주제를 섞지 말고 해당 테마를 다각도에서 심층 분석하십시오.
 - **본문 구조**: 정보 전달의 효율성을 위해 다음 구조를 따르십시오.
     1. **핵심 요약 (Key Takeaways)**: 본문 시작 부분에 가장 중요한 정보를 2~3개의 불렛 포인트로 정리하십시오.
-    2. **상세 분석 및 가이드**: 분야별 특화 지침(GitHub 키워드, 테이스팅 노트 등)을 포함하여 일목요연하게 설명하십시오.
+    2. **상세 분석 및 가이드**: 분야별 특화 지침(GitHub 키워드, 테이스팅 노트 등)을 포함하여 일목요연하고 깊이 있게 설명하십시오. 인과관계와 구체적인 예시를 풍부하게 활용하십시오.
     3. **실천 제언 (Actionable Recommendations)**: 독자가 실제 도움을 얻거나 행동할 수 있는 구체적인 팁으로 마무리하십시오.
 - **문체**: 미사여구를 줄이고 문장을 간결하게 다듬어 전체적으로 '정돈된' 느낌을 주십시오.
 </style_guidelines>
@@ -170,7 +172,7 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
 [출력 포맷 가이드]
 <thinking>
 이 섹션에서 논리적 추론 과정을 먼저 전개하십시오.
-특히 제목을 어떻게 심플하게 만들지, 본문을 어떻게 정돈할지 전략을 세우십시오.
+선정된 단일 주제를 어떻게 1,500자 이상의 깊이 있는 글로 확장할지, 그리고 제목을 어떻게 심플하게 만들지 전략을 세우십시오.
 </thinking>
 
 제목: [제목]

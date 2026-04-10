@@ -71,6 +71,21 @@ def get_formatted_news_context(category, limit=3):
     
     return context
 
+def get_single_news_context(category):
+    """
+    단일 주제에 집중하기 위해 가장 신선한 뉴스 1개만 추출하여 포맷팅합니다.
+    """
+    news_list = fetch_rss_news(category, limit=1)
+    if not news_list:
+        return "수집된 뉴스가 없습니다."
+    
+    item = news_list[0]
+    context = f"제목: {item['title']} (출처: {item['source']})\n"
+    context += f"요약: {item['summary']}...\n"
+    context += f"원본 링크: {item['link']}\n"
+    
+    return context
+
 if __name__ == "__main__":
     # 테스트 실행
     for cat in RSS_FEEDS.keys():
