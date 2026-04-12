@@ -1,0 +1,43 @@
+---
+---
+<div class="visitor-container scale-95 opacity-0 transition-all duration-700 ease-out">
+  <div class="glass flex items-center gap-4 px-4 py-1.5 rounded-full text-[0.75rem] font-medium tracking-tight">
+    <div class="flex items-center gap-1.5 px-1">
+      <span class="text-accent/80 font-bold uppercase text-[0.65rem]">Today</span>
+      <span id="busuanzi_value_site_uv" class="text-foreground/90 font-mono">0</span>
+    </div>
+    <div class="w-[1px] h-3 bg-border/60"></div>
+    <div class="flex items-center gap-1.5 px-1">
+      <span class="text-accent/80 font-bold uppercase text-[0.65rem]">Total</span>
+      <span id="busuanzi_value_site_pv" class="text-foreground/90 font-mono">0</span>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  function initVisitorCounter() {
+    const container = document.querySelector(".visitor-container");
+    if (!container) return;
+
+    // 데이터 로드 지연을 고려한 페이드 인 애니메이션
+    setTimeout(() => {
+      container.classList.remove("opacity-0", "scale-95");
+      container.classList.add("opacity-100", "scale-100");
+    }, 1000);
+  }
+
+  // 첫 로드 및 페이지 전환 시 실행
+  document.addEventListener("astro:page-load", initVisitorCounter);
+</script>
+
+<style>
+  .visitor-container {
+    display: inline-block;
+    user-select: none;
+  }
+  
+  /* 숫자가 바뀌는 효과를 위한 부드러운 전환 */
+  #busuanzi_value_site_uv, #busuanzi_value_site_pv {
+    transition: all 0.5s ease;
+  }
+</style>

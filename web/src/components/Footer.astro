@@ -1,6 +1,7 @@
 ---
 import type { HTMLAttributes } from "astro/types";
 import Socials from "./Socials.astro";
+import VisitorCount from "./VisitorCount.astro";
 
 const currentYear = new Date().getFullYear();
 
@@ -27,6 +28,9 @@ const { noMarginTop = false, class: className, ...attrs } = Astro.props;
       <span>Copyright &#169; {currentYear}</span>
       <span class="hidden sm:inline">&nbsp;|&nbsp;</span>
       <span>All rights reserved.</span>
+    </div>
+    <div class="mt-4 flex sm:mt-0">
+      <VisitorCount />
     </div>
   </div>
 </footer>
