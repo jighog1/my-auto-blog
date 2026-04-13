@@ -51,8 +51,10 @@ def fetch_rss_news(category, limit=5):
         except Exception as e:
             logging.error(f"RSS 수집 중 오류 발생 ({feed_url}): {e}")
 
-    # 다양한 소스를 섞어줍니다.
-    random.shuffle(news_items)
+    # IT 카테고리의 경우 소스 순서(긱뉴스 우선)를 유지하기 위해 셔플링을 생략합니다.
+    if category != "IT/AI/Security":
+        random.shuffle(news_items)
+    
     return news_items[:limit]
 
 def get_formatted_news_context(category, limit=3):

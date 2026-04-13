@@ -43,50 +43,73 @@ def fetch_trend_news(category):
         print(f"뉴스 수집 중 오류 발생: {e}")
         return []
 
-def get_daily_topic_v2(recent_titles=None):
-    """최근 작성된 포스트를 분석하여 겹치지 않는 카테고리를 선정하고 고퀄리티 RSS 데이터를 수집합니다."""
-    all_categories = list(CATEGORIES.keys())
-    eligible_categories = all_categories.copy()
+def get_daily_topic_v2(recent_posts=None):
+    """
+    최근 포스팅 비율(IT 5 : 취미 1)과 중복 여부를 고려하여 주제를 선정합니다.
+    """
+    it_category = "IT/AI/Security"
+    hobby_categories = ["Coffee", "Wine", "Whiskey"]
     
-    if recent_titles:
-        recent_context = " ".join(recent_titles)
-        for cat in all_categories:
-            # 카테고리 이름이 최근 제목에 포함되어 있다면 제외 후보
-            if cat.split("/")[0] in recent_context:
-                if cat in eligible_categories and len(eligible_categories) > 1:
-                    eligible_categories.remove(cat)
-                    print(f"🚫 최근 주제와 겹칠 가능성이 있어 '{cat}' 제외")
+    # 1. 비율 분석 (최근 6개 중 IT 개수 확인)
+    it_count = 0
+    recent_titles = []
+    if recent_posts:
+        for post in recent_posts:
+            recent_titles.append(post['title'])
+            if post['category'] == it_category:
+                it_count += 1
+    
+    print(f"📊 현재 비율 분석: 최근 {len(recent_posts)}건 중 IT 포스트 {it_count}건")
+    
+    # 2. 비율에 따른 카테고리 결정 (5:1 비율 유지)
+    # 최근 6개 중 IT가 5개 미만이면 IT 선택 (단, 처음에 포스트가 없을 경우도 포함)
+    if it_count < 5:
+        selected_category = it_category
+        print(f"🎯 비율 조정: IT 포스트 확보를 위해 '{it_category}' 선정")
+    else:
+        # IT가 전유물을 다 채웠으므로 취미 카테고리 중 하나 선정
+        eligible_hobbies = hobby_categories.copy()
+        
+        # 최근에 쓴 취미가 있다면 제외 로직 (최근 2건 정도 확인)
+        last_hobby = next((p['category'] for p in recent_posts if p['category'] in hobby_categories), None)
+        if last_hobby in eligible_hobbies and len(eligible_hobbies) > 1:
+            eligible_hobbies.remove(last_hobby)
+            print(f"🚫 최근 취미 '{last_hobby}' 중복 회피")
+            
+        selected_category = random.choice(eligible_hobbies)
+        print(f"🎯 비율 조정: IT 비중 충족, 취미 카테고리 '{selected_category}' 선정")
 
-    selected_category = random.choice(eligible_categories)
-    print(f"🎯 선정된 카테고리: {selected_category}")
-    
-    # collector를 통해 단일 뉴스를 가져옴 (문자열 형태의 컨텍스트)
+    # 3. 데이터 수집
     news_context = collector.get_single_news_context(selected_category)
     
     return selected_category, news_context
 
-def get_recent_posts_info(count=3):
-    """최근 작성된 포스트들의 제목을 가져와 중복을 피하기 위한 정보로 활용합니다."""
-    titles = []
+def get_recent_posts_info(count=6):
+    """최근 작성된 포스트들의 정보를 가져와 비율 계산 및 중복 회피에 활용합니다."""
+    post_info = []
     try:
         if not os.path.exists(BLOG_DIR):
             return []
             
         files = [f for f in os.listdir(BLOG_DIR) if f.endswith('.md')]
-        # 파일명 기반 역순 정렬 (auto-post-YYYYMMDD...)
         files.sort(reverse=True)
         
         for filename in files[:count]:
             with open(os.path.join(BLOG_DIR, filename), 'r', encoding='utf-8') as f:
                 content = f.read()
-                # 간단한 정규식으로 title 추출
-                match = re.search(r'title:\s*"(.*?)"', content)
-                if match:
-                    titles.append(match.group(1))
+                title_match = re.search(r'title:\s*"(.*?)"', content)
+                # 첫 번째 태그를 카테고리로 간주
+                category_match = re.search(r'tags:\n\s+-\s+"(.*?)"', content)
+                
+                info = {
+                    "title": title_match.group(1) if title_match else "Unknown",
+                    "category": category_match.group(1) if category_match else "Unknown"
+                }
+                post_info.append(info)
         
-        if titles:
-            print(f"📂 최근 포스팅 이력 확인됨: {titles}")
-        return titles
+        if post_info:
+            print(f"📂 최근 포스팅 이력 확인됨 ({len(post_info)}건)")
+        return post_info
     except Exception as e:
         print(f"⚠️ 최근 포스팅 이력 조회 중 오류: {e}")
         return []
@@ -304,11 +327,12 @@ if __name__ == "__main__":
     try:
         print("--- 지능형 실시간 트렌드 미디어 봇 가동 (RSS 에디션) ---")
         
-        # 최근 포스팅 이력 조회 (가장 최신 5개)
-        recent_titles = get_recent_posts_info(5)
+        # 최근 포스팅 이력 조회 (상태 파악을 위해 6개 조회)
+        recent_posts = get_recent_posts_info(6)
+        recent_titles = [p['title'] for p in recent_posts]
         
         # 주제 선정 및 뉴스 확보
-        category, news_context = get_daily_topic_v2(recent_titles)
+        category, news_context = get_daily_topic_v2(recent_posts)
         
         if news_context and "수집된 뉴스가 없습니다" not in news_context:
             print(f"📊 {category} 분야 전문 데이터 확보 완료")
