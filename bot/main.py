@@ -15,10 +15,7 @@ BLOG_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../web/src/d
 
 # 카테고리 정의 (심플한 카테고리로 슬림화)
 CATEGORIES = {
-    "IT/AI/Security": "긱뉴스 및 해커뉴스 기반 최신 기술 동향",
-    "Coffee": "스페셜티 커피 및 라이프스타일 트렌드",
-    "Wine": "글로벌 와인 시장 및 테이스팅 인사이트",
-    "Whiskey": "위스키 증류소 및 마켓 트렌드"
+    "IT/AI/Security": "긱뉴스 및 깃허브 상위 랭크 기반 최신 기술 동향"
 }
 
 def fetch_trend_news(category):
@@ -45,41 +42,12 @@ def fetch_trend_news(category):
 
 def get_daily_topic_v2(recent_posts=None):
     """
-    최근 포스팅 비율(IT 5 : 취미 1)과 중복 여부를 고려하여 주제를 선정합니다.
+    IT/AI/Security 카테고리로 고정하여 뉴스 주제를 선정합니다.
     """
-    it_category = "IT/AI/Security"
-    hobby_categories = ["Coffee", "Wine", "Whiskey"]
-    
-    # 1. 비율 분석 (최근 6개 중 IT 개수 확인)
-    it_count = 0
-    recent_titles = []
-    if recent_posts:
-        for post in recent_posts:
-            recent_titles.append(post['title'])
-            if post['category'] == it_category:
-                it_count += 1
-    
-    print(f"📊 현재 비율 분석: 최근 {len(recent_posts)}건 중 IT 포스트 {it_count}건")
-    
-    # 2. 비율에 따른 카테고리 결정 (5:1 비율 유지)
-    # 최근 6개 중 IT가 5개 미만이면 IT 선택 (단, 처음에 포스트가 없을 경우도 포함)
-    if it_count < 5:
-        selected_category = it_category
-        print(f"🎯 비율 조정: IT 포스트 확보를 위해 '{it_category}' 선정")
-    else:
-        # IT가 전유물을 다 채웠으므로 취미 카테고리 중 하나 선정
-        eligible_hobbies = hobby_categories.copy()
-        
-        # 최근에 쓴 취미가 있다면 제외 로직 (최근 2건 정도 확인)
-        last_hobby = next((p['category'] for p in recent_posts if p['category'] in hobby_categories), None)
-        if last_hobby in eligible_hobbies and len(eligible_hobbies) > 1:
-            eligible_hobbies.remove(last_hobby)
-            print(f"🚫 최근 취미 '{last_hobby}' 중복 회피")
-            
-        selected_category = random.choice(eligible_hobbies)
-        print(f"🎯 비율 조정: IT 비중 충족, 취미 카테고리 '{selected_category}' 선정")
+    selected_category = "IT/AI/Security"
+    print(f"🎯 주제 선정: 단일 카테고리 '{selected_category}' 고정 (취미 제외)")
 
-    # 3. 데이터 수집
+    # 데이터 수집
     news_context = collector.get_single_news_context(selected_category)
     
     return selected_category, news_context
@@ -173,13 +141,9 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
 <category_specific_instructions>
 분야가 "{category}"임을 고려하여 다음 내용을 본문에 자연스럽게 포함하십시오:
 
-[IT/AI/Security 분야일 경우]
+- 긱뉴스(GeekNews) 기반의 최신 IT 동향과 **GitHub 상위 랭크의 오픈소스/트렌드**를 중심으로 분석하십시오.
 - 새로운 소프트웨어나 도구 언급 시, 직접 링크 대신 **GitHub 검색용 키워드 및 공식 명칭**을 명확히 안내하십시오.
 - 해당 기술의 **핵심 기능, 설치/사용법, 기대 효과, 실무 활용 방안(Use Cases)**을 섹션으로 나누어 설명하십시오.
-
-[Hobby(Coffee, Wine, Whiskey) 분야일 경우]
-- 전문가 수준의 **테이스팅 노트(향, 맛, 바디감 등)**와 **전문가 팁(보관, 페어링, 최적의 음용법)**을 상세히 기술하십시오.
-- 역사적 배경이나 제조 공정의 특징 등 **깊이 있는 교양 정보**를 곁들여 전문성을 높이십시오.
 </category_specific_instructions>
 
 <context>

@@ -10,15 +10,6 @@ RSS_FEEDS = {
     "IT/AI/Security": [
         "https://news.hada.io/rss",  # GeekNews (Korean)
         "https://hnrss.org/frontpage"  # Hacker News (English)
-    ],
-    "Coffee": [
-        "https://sprudge.com/feed" # Sprudge
-    ],
-    "Wine": [
-        "https://www.decanter.com/feed/" # Decanter
-    ],
-    "Whiskey": [
-        "https://thewhiskeywash.com/feed" # The Whiskey Wash
     ]
 }
 
