@@ -287,6 +287,26 @@ description: "{summary}"
     print(f"✅ 새 포스트 저장 완료: {filename}")
     print(f"   [분야: {category} | 태그: {', '.join(final_tags)}]")
 
+def send_search_engine_ping():
+    """포스팅 완료 후 구글과 빙에 사이트맵 핑을 보내 색인을 촉진합니다."""
+    sitemap_url = "https://fivejh.com/sitemap-index.xml"
+    ping_urls = [
+        f"https://www.google.com/ping?sitemap={sitemap_url}",
+        f"https://www.bing.com/ping?sitemap={sitemap_url}"
+    ]
+    
+    print("🌍 검색엔진에 새 글 발행 알림(Ping)을 전송합니다...")
+    for url in ping_urls:
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            response = urllib.request.urlopen(req, timeout=10)
+            if response.getcode() == 200:
+                print(f"✅ Ping 성공: {url.split('//')[1].split('/')[0]}")
+            else:
+                print(f"⚠️ Ping 실패 ({response.getcode()}): {url}")
+        except Exception as e:
+            print(f"❌ Ping 전송 중 오류 발생 ({url.split('//')[1].split('/')[0]}): {e}")
+
 if __name__ == "__main__":
     try:
         print("--- 지능형 실시간 트렌드 미디어 봇 가동 (RSS 에디션) ---")
@@ -307,6 +327,10 @@ if __name__ == "__main__":
             if title and content:
                 print(f"📄 콘텐츠 생성 완료: '{title}' (분량: {len(content)}자)")
                 save_post(title, summary, tags, gen_category or category, image_prompt, content)
+                
+                # 검색엔진에 핑 전송
+                send_search_engine_ping()
+                
                 print("--- 포스팅 파이프라인 무사히 종료 ---")
             else:
                 print("--- 콘텐츠 생성 실패 (API 또는 파싱 오류) ---")
