@@ -16,7 +16,7 @@ export const SITE = {
     text: "Edit page",
     url: "https://github.com/jighog1/my-auto-blog/edit/main/web/",
   },
-  dynamicOgImage: false,
+  dynamicOgImage: true,
   dir: "ltr", // "rtl" | "auto"
   lang: "en", // html lang code. Set this empty and default will be "en"
   timezone: "Asia/Bangkok", // Default global timezone (IANA format) https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
