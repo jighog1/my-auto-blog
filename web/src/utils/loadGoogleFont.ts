@@ -47,6 +47,18 @@ async function loadGoogleFonts(
       weight: 700,
       style: "bold",
     },
+    {
+      name: "Noto Sans KR",
+      font: "Noto+Sans+KR",
+      weight: 400,
+      style: "normal",
+    },
+    {
+      name: "Noto Sans KR",
+      font: "Noto+Sans+KR",
+      weight: 700,
+      style: "bold",
+    },
   ];
 
   const fonts = await Promise.all(
