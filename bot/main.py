@@ -91,8 +91,22 @@ def get_best_model_list(client):
         
         # 1. Flash 모델들을 찾아 최신순(역순)으로 정렬 (예: 2.0-flash > 1.5-flash)
         flash_models = sorted([m for m in raw_models if "flash" in m.lower() and "experimental" not in m.lower()], reverse=True)
-        # 2. Pro 모델들을 찾아 최신순으로 정렬
-        pro_models = sorted([m for m in rdef generate_blog_post_v2(category, news_list, recent_titles=None):
+        pro_models = sorted([m for m in raw_models if "pro" in m.lower() and "experimental" not in m.lower()], reverse=True)
+        
+        # Flash -> Pro 순서로 후보군 형성
+        final_list = flash_models + pro_models
+        
+        if not final_list:
+            # 절대 망하지 않기 위한 기본 모델 강제 삽입
+            final_list = ["gemini-2.0-flash", "gemini-1.5-flash"]
+            
+        print(f"🔍 실시간 탐색된 가용 모델 리스트: {final_list}")
+        return final_list
+    except Exception as e:
+        print(f"⚠️ 모델 목록 조회 중 오류 발생 (기본값 사용): {e}")
+        return ["gemini-2.0-flash", "gemini-1.5-flash"]
+
+def generate_blog_post_v2(category, news_list, recent_titles=None):
     """수집된 뉴스 정보를 바탕으로 전문가급 인사이트가 담긴 제목, 요약, 태그, 본문을 작성합니다."""
     if not GEMINI_API_KEY:
         print("GEMINI_API_KEY 환경 변수가 없습니다. 작업 중단.")
