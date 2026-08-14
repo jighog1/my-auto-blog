@@ -89,10 +89,21 @@ REFERENCE_SECTION_PATTERN = re.compile(
 
 
 def get_daily_topic_v2(recent_posts=None):
-    """IT/AI/Security 카테고리의 최신 뉴스 문맥을 수집합니다."""
+    """최근 발행 출처를 제외하고 AI 업무 적용 우선 주제를 수집합니다."""
     selected_category = "IT/AI/Security"
-    print(f"🎯 주제 선정: 단일 카테고리 '{selected_category}' 고정 (취미 제외)")
-    news_context = collector.get_single_news_context(selected_category)
+    recent_source_urls = [
+        url
+        for post in (recent_posts or [])
+        for url in post.get("source_urls", [])
+    ]
+    print(
+        "🎯 주제 선정: AI 업무 적용 우선, 개발자·IT 실무 차순위 "
+        f"(최근 출처 {len(recent_source_urls)}개 제외)"
+    )
+    news_context = collector.get_single_news_context(
+        selected_category,
+        excluded_urls=recent_source_urls,
+    )
     return selected_category, news_context
 
 
@@ -119,6 +130,7 @@ def get_recent_posts_info(count=6):
                     "category": category_match.group(1)
                     if category_match
                     else "Unknown",
+                    "source_urls": collector.extract_source_urls(content),
                 }
             )
 
@@ -303,8 +315,10 @@ def _build_prompt(category, news_context, recent_titles, source_urls):
 
     return f"""
 <instructions>
-당신은 "{category}" 분야의 전문 기술 에디터입니다. 뉴스와 검색 자료를 단순 요약하지 말고,
-독자가 실무에 적용할 수 있는 에버그린 튜토리얼과 하우투 형식의 칼럼을 작성하십시오.
+당신은 AI 브리핑룸의 친근하지만 객관적인 리포터입니다.
+1순위 독자는 AI 트렌드를 빠르게 훑고 업무 적용 아이디어를 얻으려는 직장인이며,
+2순위 독자는 개발자와 IT 실무자입니다. 뉴스와 검색 자료를 단순 요약하지 말고,
+독자가 3분 안에 핵심을 파악한 뒤 바로 시도할 수 있는 에버그린 튜토리얼과 하우투 형식으로 작성하십시오.
 반드시 지정된 JSON 스키마로만 응답하십시오.
 </instructions>
 
@@ -319,6 +333,9 @@ def _build_prompt(category, news_context, recent_titles, source_urls):
 </factuality_rules>
 
 <style_guidelines>
+- 문체: 친근하고 쉽게 설명하되 감탄, 과장, 홍보성 표현 없이 객관적인 리포터 관점을 유지
+- 편집 우선순위: 업무 적용 아이디어 확보, 3분 안에 핵심 파악, 추가 트렌드 탐색 순서
+- 전문용어는 처음 등장할 때 짧게 풀어 쓰고, 독자를 초보자로 단정하거나 가르치려 들지 말 것
 - title: 공백 포함 22~46자의 실무 지향적이고 명확한 제목. 콜론으로 부제를 길게 덧붙이지 말 것
 - title에서 '완벽 분석', '완벽 가이드', '전면 해부', '충격', '역대급' 같은 과장 표현을 사용하지 말 것
 - summary: 공백 포함 180자 이내로 핵심과 업무 영향을 한 문장으로 요약
