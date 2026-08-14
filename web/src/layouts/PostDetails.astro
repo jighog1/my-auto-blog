@@ -11,10 +11,11 @@ import BackToTopButton from "@/components/BackToTopButton.astro";
 import TableOfContents from "@/components/TableOfContents.astro";
 import RelatedPosts from "@/components/RelatedPosts.astro";
 import { getPath } from "@/utils/getPath";
-import { slugifyStr } from "@/utils/slugify";
 import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import { SITE } from "@/config";
+import getReadingTime from "@/utils/getReadingTime";
+import { slugifyStr } from "@/utils/slugify";
 
 type Props = {
   post: CollectionEntry<"blog">;
@@ -36,14 +37,21 @@ const {
 } = post.data;
 
 const { Content } = await render(post);
+const readingMinutes = getReadingTime(post.body);
+const qualityPolicyApplied =
+  pubDatetime.getTime() >= new Date(SITE.qualityPolicySince).getTime();
+const authorLabel = author === "AI Bot" ? "AI 자동 작성" : author;
 
 let ogImageUrl: string | undefined;
+let displayImageUrl: string | undefined;
 
 // Determine OG image source
 if (typeof initOgImage === "string") {
   ogImageUrl = initOgImage; // Remote OG image (absolute URL)
+  displayImageUrl = initOgImage;
 } else if (initOgImage?.src) {
   ogImageUrl = initOgImage.src; // Local asset
+  displayImageUrl = initOgImage.src;
 }
 
 // Use dynamic OG image if enabled and no remote|local ogImage
@@ -77,10 +85,12 @@ const allPostsForNav = posts.map(({ data: { title }, id, filePath }) => ({
 
 const currentPostIndex = allPostsForNav.findIndex(a => a.id === post.id);
 
-const prevPost = currentPostIndex !== 0 ? allPostsForNav[currentPostIndex - 1] : null;
+const prevPost =
+  currentPostIndex !== 0 ? allPostsForNav[currentPostIndex - 1] : null;
 const nextPost =
-  currentPostIndex !== allPostsForNav.length - 1 ? allPostsForNav[currentPostIndex + 1] : null;
-
+  currentPostIndex !== allPostsForNav.length - 1
+    ? allPostsForNav[currentPostIndex + 1]
+    : null;
 ---
 
 <Layout {...layoutProps}>
@@ -89,77 +99,131 @@ const nextPost =
     <BackButton />
     <main
       id="main-content"
-      class:list={["pb-12 mt-8", { "mt-16": !SITE.showBackButton }]}
+      class:list={["mt-6 pb-12 sm:mt-10", { "mt-16": !SITE.showBackButton }]}
       data-pagefind-body
     >
-      <div class="grid grid-cols-1 gap-12 lg:grid-cols-4">
+      <div
+        class="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,46rem)_minmax(13rem,1fr)] lg:justify-between"
+      >
         <!-- Main Article Content -->
-        <div class="lg:col-span-3">
-          <header class="mb-12">
+        <div class="min-w-0">
+          <header class="mb-10 border-b border-border pb-8 sm:mb-12 sm:pb-10">
+            <p class="mb-4 text-sm font-bold text-accent">AI BRIEFING</p>
             <h1
-              transition:name={slugifyStr(title.replaceAll(".", "-"))}
-              class="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl"
+              class="text-3xl leading-[1.25] font-black tracking-[-0.04em] text-balance text-foreground sm:text-5xl sm:leading-[1.18]"
             >
               {title}
             </h1>
-            <div class="mt-6 flex flex-wrap items-center gap-4 text-sm font-medium text-foreground/75">
-              <span class="flex items-center gap-1.5 font-bold text-accent">
-                <span class="size-1.5 rounded-full bg-accent"></span>
-                {author}
-              </span>
-              <span class="opacity-30">|</span>
-              <Datetime {pubDatetime} {modDatetime} {timezone} />
+            <p
+              class="mt-5 text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8"
+            >
+              {description}
+            </p>
+            <div
+              class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-muted-foreground"
+            >
+              <span>{authorLabel}</span>
+              <span aria-hidden="true">·</span>
+              <Datetime {pubDatetime} {modDatetime} {timezone} hideIcon />
+              <span aria-hidden="true">·</span>
+              <span>약 {readingMinutes}분</span>
             </div>
-            
-            {ogImageUrl && (
-              <div class="mt-10 overflow-hidden rounded-2xl shadow-2xl shadow-black/5 dark:shadow-none">
-                <img src={ogImageUrl} alt={title} class="w-full object-cover max-h-[500px]" />
-              </div>
-            )}
+
+            <div
+              class:list={[
+                "mt-6 border-s-2 px-4 py-3 text-sm leading-6",
+                qualityPolicyApplied
+                  ? "border-signal bg-signal-surface text-foreground"
+                  : "border-border bg-muted text-muted-foreground",
+              ]}
+            >
+              <strong class="block text-foreground">
+                {
+                  qualityPolicyApplied
+                    ? "출처·구조 품질검사 적용"
+                    : "품질정책 도입 전 콘텐츠"
+                }
+              </strong>
+              <span>
+                {
+                  qualityPolicyApplied
+                    ? "제공된 원문 URL, 분량, 태그, 금지 표현을 자동 검사한 글입니다."
+                    : "현행 품질정책 적용 전에 작성되었습니다. 중요한 판단에는 참고자료와 최신 정보를 다시 확인해 주세요."
+                }
+              </span>
+            </div>
+
+            {
+              displayImageUrl && (
+                <div class="mt-8 overflow-hidden border border-border bg-muted">
+                  <img
+                    src={displayImageUrl}
+                    alt=""
+                    class="max-h-[480px] w-full object-cover"
+                  />
+                </div>
+              )
+            }
           </header>
 
-          <article
-            id="article"
-            class="app-prose w-full"
-          >
+          <article id="article" class="app-prose w-full">
             <Content />
           </article>
 
-          <footer class="mt-16 border-t border-dashed border-border pt-8">
+          <footer class="mt-16 border-t border-border pt-8">
+            <h2 class="mb-4 text-sm font-bold text-muted-foreground">
+              이 글의 주제
+            </h2>
             <ul class="flex flex-wrap gap-3">
-              {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />)}
+              {
+                tags.map(tag => (
+                  <Tag tag={slugifyStr(tag)} tagName={tag} size="sm" />
+                ))
+              }
             </ul>
-            
+
             <ShareLinks />
-            
+
             <RelatedPosts currentPost={post} allPosts={posts} />
 
             <!-- Previous/Next Navigation -->
-            <div class="mt-12 grid grid-cols-1 gap-6 border-t border-border pt-8 sm:grid-cols-2">
-              {prevPost && (
-                <a href={getPath(prevPost.id, prevPost.filePath)} class="group flex gap-3 rounded-xl border border-transparent p-4 transition-all hover:bg-accent/5 hover:border-accent/10">
-                  <IconChevronLeft class="mt-1 h-5 w-5 flex-none transition-transform group-hover:-translate-x-1" />
-                  <div>
-                    <span class="text-xs uppercase tracking-widest opacity-60">이전 글</span>
-                    <div class="font-bold text-accent">{prevPost.title}</div>
-                  </div>
-                </a>
-              )}
-              {nextPost && (
-                <a href={getPath(nextPost.id, nextPost.filePath)} class="group col-start-2 flex justify-end gap-3 rounded-xl border border-transparent p-4 text-end transition-all hover:bg-accent/5 hover:border-accent/10">
-                  <div>
-                    <span class="text-xs uppercase tracking-widest opacity-60">다음 글</span>
-                    <div class="font-bold text-accent">{nextPost.title}</div>
-                  </div>
-                  <IconChevronRight class="mt-1 h-5 w-5 flex-none transition-transform group-hover:translate-x-1" />
-                </a>
-              )}
+            <div
+              class="mt-12 grid grid-cols-1 gap-6 border-t border-border pt-8 sm:grid-cols-2"
+            >
+              {
+                prevPost && (
+                  <a
+                    href={getPath(prevPost.id, prevPost.filePath)}
+                    class="group flex gap-3 border-t border-border py-4 hover:text-accent"
+                  >
+                    <IconChevronLeft class="mt-1 h-5 w-5 flex-none transition-transform group-hover:-translate-x-1" />
+                    <div>
+                      <span class="text-xs text-muted-foreground">이전 글</span>
+                      <div class="font-bold">{prevPost.title}</div>
+                    </div>
+                  </a>
+                )
+              }
+              {
+                nextPost && (
+                  <a
+                    href={getPath(nextPost.id, nextPost.filePath)}
+                    class="group flex justify-end gap-3 border-t border-border py-4 text-end hover:text-accent sm:col-start-2"
+                  >
+                    <div>
+                      <span class="text-xs text-muted-foreground">다음 글</span>
+                      <div class="font-bold">{nextPost.title}</div>
+                    </div>
+                    <IconChevronRight class="mt-1 h-5 w-5 flex-none transition-transform group-hover:translate-x-1" />
+                  </a>
+                )
+              }
             </div>
           </footer>
         </div>
 
         <!-- Sidebar (Table of Contents) -->
-        <TableOfContents className="lg:col-span-1" />
+        <TableOfContents />
       </div>
     </main>
     <BackToTopButton />
@@ -171,14 +235,16 @@ const nextPost =
   /** Create a progress indicator
    *  at the top */
   function createProgressBar() {
+    if (document.getElementById("reading-progress")) return;
     // Create the main container div
     const progressContainer = document.createElement("div");
     progressContainer.className =
-      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+      "progress-container fixed top-0 z-50 h-0.5 w-full bg-background";
+    progressContainer.id = "reading-progress";
 
     // Create the progress bar div
     const progressBar = document.createElement("div");
-    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.className = "progress-bar h-0.5 w-0 bg-accent";
     progressBar.id = "myBar";
 
     // Append the progress bar to the progress container
@@ -192,6 +258,8 @@ const nextPost =
   /** Update the progress bar
    *  when user scrolls */
   function updateScrollProgress() {
+    if (document.documentElement.dataset.readingProgressReady) return;
+    document.documentElement.dataset.readingProgressReady = "true";
     document.addEventListener("scroll", () => {
       const winScroll =
         document.body.scrollTop || document.documentElement.scrollTop;
@@ -213,7 +281,7 @@ const nextPost =
    *  allowing sharing of sections easily */
   function addHeadingLinks() {
     const headings = Array.from(
-      document.querySelectorAll("h2, h3, h4, h5, h6")
+      document.querySelectorAll("#article h2, #article h3")
     );
     for (const heading of headings) {
       heading.classList.add("group");
@@ -234,12 +302,16 @@ const nextPost =
   /** Attaches copy buttons to code blocks in the document,
    * allowing users to copy code easily. */
   function attachCopyButtons() {
-    const copyButtonLabel = "Copy";
-    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+    const copyButtonLabel = "복사";
+    const codeBlocks = Array.from(
+      document.querySelectorAll("pre:not(.mermaid)")
+    );
 
     for (const codeBlock of codeBlocks) {
+      if (codeBlock.parentElement?.classList.contains("code-block-wrap"))
+        continue;
       const wrapper = document.createElement("div");
-      wrapper.style.position = "relative";
+      wrapper.className = "code-block-wrap relative";
 
       // Check if --file-name-offset custom property exists
       const computedStyle = getComputedStyle(codeBlock);
@@ -253,7 +325,7 @@ const nextPost =
 
       const copyButton = document.createElement("button");
       copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
-      copyButton.innerHTML = copyButtonLabel;
+      copyButton.textContent = copyButtonLabel;
       codeBlock.setAttribute("tabindex", "0");
       codeBlock.appendChild(copyButton);
 
@@ -273,7 +345,7 @@ const nextPost =
       await navigator.clipboard.writeText(text ?? "");
 
       // visual feedback that task is completed
-      button.innerText = "Copied";
+      button.innerText = "복사됨";
 
       setTimeout(() => {
         button.innerText = copyButtonLabel;

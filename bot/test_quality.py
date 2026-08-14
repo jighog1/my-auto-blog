@@ -26,6 +26,14 @@ class FakeClient:
 
 
 class QualityPolicyTests(unittest.TestCase):
+    @staticmethod
+    def structured_body():
+        sections = "\n\n".join(
+            f"## {heading}\n\n검증 가능한 설명입니다."
+            for heading in main.REQUIRED_BODY_HEADINGS
+        )
+        return sections + ("\n\n추가 설명입니다." * 400)
+
     def test_model_filtering_prefers_compatible_configured_model(self):
         models = [
             FakeModel("models/gemini-3.6-flash", ["generateContent"]),
@@ -74,6 +82,45 @@ class QualityPolicyTests(unittest.TestCase):
                 "너무 짧은 본문",
                 ["https://example.com/source"],
             )
+
+    def test_long_or_hyped_title_is_rejected(self):
+        body = self.structured_body()
+        with self.assertRaisesRegex(ValueError, "제목이 52자를 초과"):
+            main.validate_post(
+                "가" * (main.MAX_TITLE_LENGTH + 1),
+                "업무 영향을 설명하는 요약입니다.",
+                ["IT", "AI", "Security"],
+                body,
+                ["https://example.com/source"],
+            )
+
+        with self.assertRaisesRegex(ValueError, "과장된 표현"):
+            main.validate_post(
+                "새 AI 모델 완벽 분석",
+                "업무 영향을 설명하는 요약입니다.",
+                ["IT", "AI", "Security"],
+                body,
+                ["https://example.com/source"],
+            )
+
+    def test_required_briefing_sections_are_enforced(self):
+        with self.assertRaisesRegex(ValueError, "필수 섹션이 없습니다"):
+            main.validate_post(
+                "업무에 적용하는 AI 변화",
+                "업무 영향을 설명하는 요약입니다.",
+                ["IT", "AI", "Security"],
+                "가" * main.MIN_BODY_LENGTH,
+                ["https://example.com/source"],
+            )
+
+    def test_structured_briefing_passes_quality_policy(self):
+        main.validate_post(
+            "업무에 적용하는 AI 변화",
+            "업무 영향을 설명하는 요약입니다.",
+            ["IT", "AI", "Security"],
+            self.structured_body(),
+            ["https://example.com/source"],
+        )
 
     def test_reference_section_uses_only_deduplicated_sources(self):
         content = "가" * main.MIN_BODY_LENGTH

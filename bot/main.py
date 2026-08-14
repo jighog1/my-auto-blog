@@ -54,6 +54,22 @@ UNSTABLE_MODEL_MARKERS = (
 
 MIN_BODY_LENGTH = 3500
 MIN_TAG_COUNT = 3
+MAX_TITLE_LENGTH = 52
+MAX_SUMMARY_LENGTH = 180
+REQUIRED_BODY_HEADINGS = (
+    "30초 요약",
+    "무슨 일인가",
+    "왜 중요한가",
+    "업무에 어떻게 쓸까",
+    "한계와 주의점",
+)
+TITLE_HYPE_MARKERS = (
+    "완벽 분석",
+    "완벽 가이드",
+    "전면 해부",
+    "충격",
+    "역대급",
+)
 FAILURE_MARKERS = (
     "제목 생성 실패",
     "요약 생성 실패",
@@ -230,16 +246,36 @@ def validate_post(title, summary, tags, body, source_urls):
 
     if not title_text or any(marker in title_text.lower() for marker in FAILURE_MARKERS):
         errors.append("제목이 비어 있거나 실패 문구입니다.")
+    if len(title_text) > MAX_TITLE_LENGTH:
+        errors.append(
+            f"제목이 {MAX_TITLE_LENGTH}자를 초과합니다: {len(title_text)}자"
+        )
+    if any(marker in title_text for marker in TITLE_HYPE_MARKERS):
+        errors.append("제목에 과장된 표현이 포함되었습니다.")
     if not summary_text or any(
         marker in summary_text.lower() for marker in FAILURE_MARKERS
     ):
         errors.append("요약이 비어 있거나 실패 문구입니다.")
+    if len(summary_text) > MAX_SUMMARY_LENGTH:
+        errors.append(
+            f"요약이 {MAX_SUMMARY_LENGTH}자를 초과합니다: {len(summary_text)}자"
+        )
     if len(tags or []) < MIN_TAG_COUNT:
         errors.append(f"태그가 {MIN_TAG_COUNT}개 미만입니다.")
     if len(body_without_references) < MIN_BODY_LENGTH:
         errors.append(
             f"본문이 {MIN_BODY_LENGTH}자 미만입니다: {len(body_without_references)}자"
         )
+    missing_headings = [
+        heading
+        for heading in REQUIRED_BODY_HEADINGS
+        if not re.search(
+            rf"(?m)^##\s+(?:\d+[.)]\s*)?{re.escape(heading)}\s*$",
+            body_without_references,
+        )
+    ]
+    if missing_headings:
+        errors.append("필수 섹션이 없습니다: " + ", ".join(missing_headings))
     if not normalized_urls:
         errors.append("검증 가능한 HTTP(S) 원문 URL이 없습니다.")
 
@@ -283,12 +319,22 @@ def _build_prompt(category, news_context, recent_titles, source_urls):
 </factuality_rules>
 
 <style_guidelines>
-- title: 실무 지향적이고 명확한 제목
-- summary: 핵심 내용을 한 문장으로 요약
+- title: 공백 포함 22~46자의 실무 지향적이고 명확한 제목. 콜론으로 부제를 길게 덧붙이지 말 것
+- title에서 '완벽 분석', '완벽 가이드', '전면 해부', '충격', '역대급' 같은 과장 표현을 사용하지 말 것
+- summary: 공백 포함 180자 이내로 핵심과 업무 영향을 한 문장으로 요약
 - tags: 핵심 키워드 3~6개
 - category: "{category}"
 - body: Markdown H2/H3, 목록, 코드 블록을 사용한 4,000~6,000자 분량
-- 아키텍처를 다루면 Mermaid 코드 블록을 포함하고, 실행 가능한 코드 예시와 장단점, FAQ, 총평을 포함
+- body는 아래 H2 섹션을 정확한 이름과 순서로 반드시 포함할 것:
+  1. ## 30초 요약
+  2. ## 무슨 일인가
+  3. ## 왜 중요한가
+  4. ## 업무에 어떻게 쓸까
+  5. ## 한계와 주의점
+- 필요한 경우 위 섹션 뒤에 기술 세부사항, 코드 예시, FAQ를 추가할 수 있음
+- '업무에 어떻게 쓸까'에는 독자가 바로 시도할 수 있는 구체적인 단계와 적용 조건을 포함할 것
+- '한계와 주의점'에는 입력 자료로 확인할 수 없는 부분과 추가 검증이 필요한 부분을 명시할 것
+- 아키텍처를 다룰 때만 Mermaid 코드 블록을 포함할 것
 </style_guidelines>
 
 <recent_posts>
@@ -373,7 +419,7 @@ def save_post(title, summary, tags_list, category, content, source_urls):
     frontmatter_lines = [
         "---",
         f"title: {_yaml_string(title)}",
-        'author: "AI Bot"',
+        'author: "AI 브리핑룸 편집부"',
         f"pubDatetime: {now.strftime('%Y-%m-%dT%H:%M:%SZ')}",
         "featured: false",
         "draft: false",
@@ -391,8 +437,8 @@ def save_post(title, summary, tags_list, category, content, source_urls):
     summary_card = "\n".join(
         [
             "> [!IMPORTANT]",
-            f"> **분야**: {category}  ",
-            f"> **한 줄 요약**: {summary}",
+            f"> **한 줄 브리핑**: {summary}  ",
+            f"> **분야**: {category}",
             "",
             "---",
             "",

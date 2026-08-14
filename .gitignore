@@ -5,3 +5,5 @@ tmp/
 node_modules/
 dist/
 .env
+.agents/
+.astro/

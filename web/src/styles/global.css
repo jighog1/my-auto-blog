@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 @import "./theme.css";
 @import "./typography.css";
 
@@ -14,37 +15,21 @@
     @apply overflow-y-scroll scroll-smooth;
   }
   body {
-    @apply flex min-h-svh flex-col font-app text-foreground selection:bg-accent/20 selection:text-accent relative;
-    background-color: var(--background);
-  }
-  
-  /* Very Subtle Decorative Sparkle - Disabled in Dark to prevent Oatmeal feel */
-  body::before {
-    content: "";
-    @apply fixed inset-0 -z-10 opacity-10 dark:hidden pointer-events-none;
-    background-image: 
-      radial-gradient(at 0% 0%, var(--accent) 0, transparent 40%), 
-      radial-gradient(at 100% 100%, #4facfe 0, transparent 40%);
-    filter: blur(150px);
+    @apply relative flex min-h-svh flex-col bg-background font-app text-foreground selection:bg-accent/20 selection:text-foreground;
   }
 
   a,
   button {
-    @apply transition-all duration-200 outline-offset-1 focus-visible:outline-2;
+    @apply outline-offset-4 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-accent;
   }
 }
 
-/* Minimal Modern Glassmorphism */
-@utility glass {
-  @apply bg-background/50 backdrop-blur-md border border-border/50 shadow-sm transition-all;
-}
-
 @utility app-layout {
-  @apply mx-auto w-full max-w-5xl px-8;
+  @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
 }
 
 @utility app-prose {
-  @apply prose prose-slate max-w-none dark:prose-invert;
+  @apply prose max-w-none prose-slate dark:prose-invert;
   --tw-prose-body: var(--foreground);
   --tw-prose-headings: var(--foreground);
   --tw-prose-links: var(--accent);
@@ -59,16 +44,24 @@
   scroll-margin-block: 2.5rem;
 }
 
-/* Cleaner Card Style */
-.card-hover {
-  @apply transition-all duration-300 hover:shadow-2xl hover:shadow-black/10 dark:hover:shadow-black/40 hover:border-accent/50;
-}
-
-/* Premium Mermaid Styling */
 .mermaid {
-  @apply flex justify-center my-10 p-6 rounded-2xl bg-muted/20 border border-border/50 shadow-inner overflow-x-auto;
+  @apply my-10 flex justify-center overflow-x-auto border-y border-border bg-surface p-5 sm:p-8;
 }
 .mermaid svg {
-  @apply max-w-full h-auto transition-transform duration-300 hover:scale-[1.02];
+  @apply h-auto max-w-full;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
