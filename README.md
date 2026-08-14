@@ -12,7 +12,7 @@
 4. `generateContent`를 지원하는 안정 Gemini 텍스트 모델로 Markdown을 생성합니다.
 5. 제목 길이와 과장 표현, 요약, 태그, 본문 길이, 필수 브리핑 섹션, 출처와 허용되지 않은 URL을 검사합니다.
 6. 검증된 원문 URL로 `## 참고자료`를 추가한 뒤 글을 저장합니다.
-7. GitHub Actions가 PR을 만들고 즉시 squash merge하면, `main` 배포 워크플로가 Pages에 한 번만 배포합니다.
+7. GitHub Actions가 PR을 만들고 즉시 squash merge하면, 발행 워크플로 성공 이벤트를 받은 배포 워크플로가 최신 `main`을 Pages에 배포합니다.
 
 품질검사나 생성이 실패하면 Markdown을 저장하지 않으며 워크플로도 실패합니다.
 
