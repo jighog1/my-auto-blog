@@ -73,6 +73,66 @@ class QualityPolicyTests(unittest.TestCase):
             ],
         )
 
+    def test_topic_ranking_prioritizes_ai_workplace_then_developer(self):
+        items = [
+            {
+                "title": "새로운 Python 패키지 관리자 공개",
+                "summary": "개발자 도구와 오픈소스 생태계 소식",
+                "link": "https://example.com/developer",
+            },
+            {
+                "title": "기업 문서 업무를 돕는 AI 에이전트",
+                "summary": "워크플로 자동화와 생산성 향상 사례",
+                "link": "https://example.com/ai-work",
+            },
+            {
+                "title": "AI가 추천한 여름 커피 레시피",
+                "summary": "집에서 즐기는 취미 생활",
+                "link": "https://example.com/coffee",
+            },
+        ]
+
+        ranked = collector.rank_news_items(items)
+
+        self.assertEqual(
+            [item["link"] for item in ranked],
+            ["https://example.com/ai-work", "https://example.com/developer"],
+        )
+
+    def test_topic_ranking_excludes_recently_published_source(self):
+        items = [
+            {
+                "title": "업무 자동화를 위한 생성형 AI",
+                "summary": "기업 워크플로 적용 방법",
+                "link": "https://example.com/already-used#section",
+            },
+            {
+                "title": "개발자를 위한 보안 자동화",
+                "summary": "실무 보안 워크플로",
+                "link": "https://example.com/new-topic",
+            },
+        ]
+
+        ranked = collector.rank_news_items(
+            items,
+            ["https://example.com/already-used"],
+        )
+
+        self.assertEqual([item["link"] for item in ranked], ["https://example.com/new-topic"])
+
+    def test_prompt_encodes_audience_goals_and_reporter_tone(self):
+        prompt = main._build_prompt(
+            "IT/AI/Security",
+            "뉴스 문맥 https://example.com/source",
+            [],
+            ["https://example.com/source"],
+        )
+
+        self.assertIn("친근하지만 객관적인 리포터", prompt)
+        self.assertIn("1순위 독자는 AI 트렌드", prompt)
+        self.assertIn("업무 적용 아이디어 확보", prompt)
+        self.assertIn("3분 안에 핵심", prompt)
+
     def test_short_body_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "본문이 3500자 미만"):
             main.validate_post(
