@@ -3,4 +3,4 @@ google-genai
 requests
 python-dotenv
 feedparser
-duckduckgo-search
+ddgs==9.14.4
