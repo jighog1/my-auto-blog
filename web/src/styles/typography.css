@@ -16,7 +16,7 @@
     }
 
     h3 {
-      @apply italic;
+      @apply font-semibold;
     }
 
     p,
@@ -30,7 +30,7 @@
     }
 
     a {
-      @apply wrap-break-word text-foreground decoration-dashed underline-offset-4 hover:text-accent focus-visible:no-underline;
+      @apply font-medium wrap-break-word text-accent decoration-accent/40 underline-offset-4 hover:decoration-accent focus-visible:no-underline;
     }
 
     ul {
@@ -77,7 +77,7 @@
     }
 
     blockquote {
-      @apply border-s-accent/80 wrap-break-word opacity-80;
+      @apply border-s-accent bg-surface py-1 wrap-break-word text-foreground opacity-100;
     }
 
     details {

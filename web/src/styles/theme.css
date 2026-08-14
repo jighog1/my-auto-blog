@@ -1,24 +1,37 @@
 :root {
-  --background: #ffffff;
-  --foreground: #333333;
-  --accent: #0066b8;    /* VS Code Light Blue */
-  --muted: #f3f3f3;
-  --border: #e8e8e8;
+  --background: #f7f6f2;
+  --surface: #fffdfa;
+  --foreground: #1b1f23;
+  --muted-foreground: #62676f;
+  --accent: #1757d3;
+  --muted: #eeece5;
+  --signal: #0c6b5d;
+  --signal-surface: #e3f3ee;
+  --border: #d9d6cd;
 }
 
 html[data-theme="dark"] {
-  --background: #1e1e1e; /* VS Code Default Dark */
-  --foreground: #d4d4d4; /* VS Code Soft White */
-  --accent: #3794ef;    /* VS Code Dark Blue */
-  --muted: #2a2d2e;     /* VS Code Dark Muted */
-  --border: #333333;
+  --background: #111417;
+  --surface: #181c20;
+  --foreground: #ece9e2;
+  --muted-foreground: #abb2ba;
+  --accent: #7aa7ff;
+  --muted: #24292e;
+  --signal: #79d8c7;
+  --signal-surface: #163630;
+  --border: #343a40;
 }
 
 @theme {
-  --font-app: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-app:
+    "Pretendard Variable", Pretendard, "Noto Sans KR", system-ui, sans-serif;
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-muted: var(--muted);
+  --color-signal: var(--signal);
+  --color-signal-surface: var(--signal-surface);
   --color-border: var(--border);
 }

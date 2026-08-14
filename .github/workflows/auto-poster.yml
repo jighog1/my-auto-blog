@@ -18,8 +18,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    outputs:
-      merged: ${{ steps.merge.outputs.merged }}
 
     steps:
       - name: Checkout repository
@@ -51,75 +49,27 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "[Auto] 검증된 블로그 포스트 작성"
-          title: "🚀 검증된 새 블로그 포스트"
+          commit-message: "[Auto] AI 브리핑룸 게시물 작성"
+          title: "검증된 AI 브리핑룸 게시물"
           body: |
             ## 자동 발행
 
             RSS와 검색 출처를 기반으로 생성되고 품질검사를 통과한 글입니다.
-            이 PR은 워크플로에서 즉시 병합되며 같은 실행에서 GitHub Pages에 배포됩니다.
+            이 PR은 워크플로에서 즉시 병합되며 `main` 배포 워크플로가 GitHub Pages에 반영합니다.
 
             검증 항목:
             - 안정 Gemini 텍스트 모델 사용
             - 본문 3,500자 이상 및 태그 3개 이상
+            - 제목 52자 이하 및 과장 표현 제외
+            - 30초 요약, 업무 적용, 한계와 주의점 구조
             - 제공된 HTTP(S) 원문 출처만 사용
             - 참고자료 섹션 자동 생성
           branch: auto-post-draft
           delete-branch: true
 
       - name: Merge validated pull request
-        id: merge
         if: steps.create-pr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ steps.create-pr.outputs.pull-request-url }}
-        run: |
-          gh pr merge "$PR_URL" --squash --delete-branch
-          echo "merged=true" >> "$GITHUB_OUTPUT"
-
-  deploy:
-    name: Deploy merged post to GitHub Pages
-    needs: publish
-    if: needs.publish.outputs.merged == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    concurrency:
-      group: pages
-      cancel-in-progress: false
-
-    steps:
-      - name: Checkout merged main branch
-        uses: actions/checkout@v7
-        with:
-          ref: main
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
-      - name: Install dependencies
-        working-directory: web
-        run: npm ci
-
-      - name: Build with Astro
-        working-directory: web
-        run: npm run build
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: web/dist
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+        run: gh pr merge "$PR_URL" --squash --delete-branch

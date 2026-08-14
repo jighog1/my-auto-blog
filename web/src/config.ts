@@ -1,23 +1,25 @@
 export const SITE = {
-  website: "https://fivejh.com", // replace this with your deployed domain
-  author: "Tech Insights Desk",
+  website: "https://fivejh.com",
+  author: "AI 브리핑룸 편집부",
   profile: "https://github.com/jighog1",
-  desc: "전문가의 심층 분석이 담긴 최신 IT/AI 트렌드 미디어 플랫폼입니다.",
-  title: "Tech Insights Desk",
-  ogImage: "astropaper-og.jpg",
+  desc: "바쁜 직장인을 위해 AI 트렌드의 핵심과 업무 적용 아이디어를 정리하는 독립 미디어입니다.",
+  title: "AI 브리핑룸",
+  tagline: "일하는 사람의 AI 브리핑",
+  ogImage: "og.png",
   lightAndDarkMode: true,
-  postPerIndex: 4,
+  postPerIndex: 8,
   postPerPage: 6,
   scheduledPostMargin: 15 * 60 * 1000, // 15 minutes
   showArchives: true,
-  showBackButton: true, // show back button in post detail
+  showBackButton: true,
   editPost: {
     enabled: false,
-    text: "Edit page",
+    text: "이 글 수정하기",
     url: "https://github.com/jighog1/my-auto-blog/edit/main/web/",
   },
   dynamicOgImage: true,
-  dir: "ltr", // "rtl" | "auto"
-  lang: "en", // html lang code. Set this empty and default will be "en"
-  timezone: "Asia/Bangkok", // Default global timezone (IANA format) https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  dir: "ltr",
+  lang: "ko-KR",
+  timezone: "Asia/Seoul",
+  qualityPolicySince: "2026-08-14T08:00:00Z",
 } as const;

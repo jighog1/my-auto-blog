@@ -3,30 +3,32 @@ import Breadcrumb from "@/components/Breadcrumb.astro";
 import { SITE } from "@/config";
 
 type StringTitle = { pageTitle: string };
-type ArrayTitle = { pageTitle: [string, string]; titleTransition: string };
+type ArrayTitle = { pageTitle: [string, string] };
 
 type Props = (StringTitle | ArrayTitle) & { pageDesc?: string };
 
 const { props } = Astro;
 
-const backUrl = SITE.showBackButton ? Astro.url.pathname : import.meta.env.BASE_URL;
+const backUrl = SITE.showBackButton
+  ? Astro.url.pathname
+  : import.meta.env.BASE_URL;
 ---
 
 <Breadcrumb />
-<main data-backUrl={backUrl} id="main-content" class="app-layout pb-4">
+<main data-backUrl={backUrl} id="main-content" class="app-layout pb-8">
   {
-    "titleTransition" in props ? (
-      <h1 class="text-2xl font-semibold sm:text-3xl">
+    Array.isArray(props.pageTitle) ? (
+      <h1 class="text-3xl font-black tracking-[-0.035em] sm:text-4xl">
         {props.pageTitle[0]}
-        <span transition:name={props.titleTransition}>
-          {props.pageTitle[1]}
-        </span>
+        <span>{props.pageTitle[1]}</span>
       </h1>
     ) : (
-      <h1 class="text-2xl font-semibold sm:text-3xl">{props.pageTitle}</h1>
+      <h1 class="text-3xl font-black tracking-[-0.035em] sm:text-4xl">
+        {props.pageTitle}
+      </h1>
     )
   }
-  <p class="mt-2 mb-6 italic">{props.pageDesc}</p>
+  <p class="mt-2 mb-8 max-w-2xl text-muted-foreground">{props.pageDesc}</p>
   <slot />
 </main>
 

@@ -13,7 +13,9 @@ const { currentPost, allPosts } = Astro.props;
 const relatedPosts = allPosts
   .filter(post => post.id !== currentPost.id)
   .map(post => {
-    const commonTags = post.data.tags.filter(tag => currentPost.data.tags.includes(tag));
+    const commonTags = post.data.tags.filter(tag =>
+      currentPost.data.tags.includes(tag)
+    );
     return { ...post, score: commonTags.length };
   })
   .filter(post => post.score > 0)
@@ -21,13 +23,25 @@ const relatedPosts = allPosts
   .slice(0, 3);
 ---
 
-{relatedPosts.length > 0 && (
-  <section class="mt-16 sm:mt-24">
-    <h2 class="mb-8 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">함께 읽으면 좋은 글</h2>
-    <ul class="grid gap-8">
-      {relatedPosts.map(post => (
-        <Card variant="h3" id={post.id} collection="blog" data={post.data} filePath={post.filePath} />
-      ))}
-    </ul>
-  </section>
-)}
+{
+  relatedPosts.length > 0 && (
+    <section class="mt-16 sm:mt-20">
+      <h2 class="mb-5 text-2xl font-extrabold tracking-[-0.025em] text-foreground sm:text-3xl">
+        함께 읽으면 좋은 글
+      </h2>
+      <ul class="grid gap-x-8 md:grid-cols-2">
+        {relatedPosts.map(post => (
+          <Card
+            variant="h3"
+            display="compact"
+            id={post.id}
+            collection="blog"
+            data={post.data}
+            filePath={post.filePath}
+            body={post.body}
+          />
+        ))}
+      </ul>
+    </section>
+  )
+}

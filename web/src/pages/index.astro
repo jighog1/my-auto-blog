@@ -3,7 +3,6 @@ import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import Socials from "@/components/Socials.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import Card from "@/components/Card.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
@@ -14,56 +13,112 @@ import { SITE } from "@/config";
 const posts = await getCollection("blog");
 
 const sortedPosts = getSortedPosts(posts);
-const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
-const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+const publishedPosts = sortedPosts.filter(({ data }) => !data.draft);
+const primaryPost = publishedPosts[0];
+const briefingPosts = publishedPosts.slice(1, 4);
+const latestPosts = publishedPosts.slice(4, SITE.postPerIndex);
 ---
 
 <Layout>
   <Header />
-  <main id="main-content" data-layout="index" data-base-url={import.meta.env.BASE_URL} class="app-layout">
-    <section id="hero" class="py-16 sm:py-24">
-      <div class="glass relative overflow-hidden rounded-3xl p-8 sm:p-12">
-        <div class="relative z-10">
-          <h1 class="mb-6 text-4xl font-extrabold tracking-tight sm:text-6xl">
-            AI-Driven <span class="text-accent underline decoration-accent/30 decoration-8 underline-offset-8">Insights</span>
-          </h1>
-          <p class="max-w-2xl text-lg leading-relaxed opacity-90 sm:text-xl">
-            최신 글로벌 트렌드와 기술적 통찰을 AI가 분석하여 매일 자동으로 전해드립니다. 
-            단순한 정보 수집을 넘어, 비즈니스와 기술의 미래를 먼저 만나보세요.
-          </p>
-          <div class="mt-10 flex flex-wrap items-center gap-6">
-            <Socials />
-            <a
-              target="_blank"
-              href={`${import.meta.env.BASE_URL}rss.xml`}
-              class="flex items-center gap-2 font-semibold text-accent hover:underline"
-              aria-label="rss feed"
-              title="RSS Feed"
-            >
-              <IconRss width={24} height={24} class="stroke-3" />
-              구독하기
-            </a>
-          </div>
+  <main
+    id="main-content"
+    data-layout="index"
+    data-base-url={import.meta.env.BASE_URL}
+    class="app-layout"
+  >
+    <section
+      id="hero"
+      class="grid gap-10 border-b border-border py-12 md:grid-cols-[minmax(0,1.5fr)_minmax(16rem,0.7fr)] md:items-end md:py-16"
+    >
+      <div>
+        <p class="text-sm font-bold text-accent">{SITE.tagline}</p>
+        <h1
+          class="mt-4 max-w-3xl text-4xl leading-[1.15] font-black tracking-[-0.045em] text-balance sm:text-6xl"
+        >
+          AI를 빠르게 읽고,<br />일에 바로 연결하세요.
+        </h1>
+        <p
+          class="mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8"
+        >
+          중요한 변화만 골라 30초 핵심, 업무 적용 아이디어, 확인 가능한 원문으로
+          정리합니다.
+        </p>
+        <div class="mt-7 flex flex-wrap items-center gap-5">
+          <a
+            href="#today-briefing"
+            class="inline-flex min-h-11 items-center bg-accent px-5 py-2.5 text-sm font-bold text-background hover:opacity-90"
+          >
+            오늘의 브리핑 보기
+          </a>
+          <a
+            target="_blank"
+            href={`${import.meta.env.BASE_URL}rss.xml`}
+            class="flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-accent"
+            aria-label="RSS 피드 구독"
+            title="RSS 피드"
+          >
+            <IconRss width={20} height={20} class="stroke-3" />
+            RSS 구독
+          </a>
         </div>
-        
-        <!-- Decorative background element -->
-        <div class="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl"></div>
       </div>
+      <ol
+        class="border-s border-border ps-5 text-sm text-muted-foreground sm:ps-6"
+      >
+        <li class="border-b border-border py-3">
+          <strong class="me-2 text-foreground">01</strong>30초 안에 핵심 파악
+        </li>
+        <li class="border-b border-border py-3">
+          <strong class="me-2 text-foreground">02</strong>내 업무의 적용 지점
+          확인
+        </li>
+        <li class="py-3">
+          <strong class="me-2 text-foreground">03</strong>원문에서 사실 검증
+        </li>
+      </ol>
     </section>
 
     {
-      featuredPosts.length > 0 && (
-        <section
-          id="featured"
-          class:list={[
-            "pt-12 pb-6",
-            { "border-b border-border": recentPosts.length > 0 },
-          ]}
-        >
-          <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
+      primaryPost && (
+        <section id="today-briefing" class="py-12 sm:py-16">
+          <div class="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p class="text-sm font-bold text-signal">TODAY</p>
+              <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
+                오늘 꼭 볼 AI 이슈
+              </h2>
+            </div>
+            <span class="hidden text-sm text-muted-foreground sm:block">
+              핵심부터 적용 포인트까지
+            </span>
+          </div>
           <ul>
-            {featuredPosts.map(data => (
-              <Card variant="h3" {...data} />
+            <Card variant="h3" display="lead" {...primaryPost} />
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      briefingPosts.length > 0 && (
+        <section
+          id="work-briefing"
+          class="border-y border-border py-12 sm:py-14"
+        >
+          <div class="mb-5 max-w-2xl">
+            <p class="text-sm font-bold text-signal">WORK</p>
+            <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
+              업무에 가져갈 AI 이슈
+            </h2>
+            <p class="mt-2 text-sm leading-6 text-muted-foreground">
+              설명만 읽어도 변화의 맥락을 잡고, 필요한 글만 깊게 살펴볼 수
+              있습니다.
+            </p>
+          </div>
+          <ul class="grid gap-x-8 md:grid-cols-3">
+            {briefingPosts.map(data => (
+              <Card variant="h3" display="compact" {...data} />
             ))}
           </ul>
         </section>
@@ -71,22 +126,35 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
     }
 
     {
-      recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
+      latestPosts.length > 0 && (
+        <section id="recent-posts" class="py-12 sm:py-16">
+          <div class="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <p class="text-sm font-bold text-accent">LATEST</p>
+              <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
+                최신 분석
+              </h2>
+            </div>
+            <LinkButton
+              href={`${import.meta.env.BASE_URL}posts/`}
+              class="text-sm font-semibold text-accent"
+            >
+              전체 글
+              <IconArrowRight class="inline-block rtl:-rotate-180" />
+            </LinkButton>
+          </div>
           <ul>
-            {recentPosts.map(
-              (data, index) =>
-                index < SITE.postPerIndex && <Card variant="h3" {...data} />
-            )}
+            {latestPosts.map(data => (
+              <Card variant="h3" {...data} />
+            ))}
           </ul>
         </section>
       )
     }
 
-    <div class="my-8 text-center">
+    <div class="mb-14 text-center">
       <LinkButton href={`${import.meta.env.BASE_URL}posts/`}>
-        All Posts
+        모든 글 보기
         <IconArrowRight class="inline-block rtl:-rotate-180" />
       </LinkButton>
     </div>

@@ -18,9 +18,12 @@ export const getStaticPaths = (async ({ paginate }) => {
 const { page } = Astro.props;
 ---
 
-<Layout title={`Posts | ${SITE.title}`}>
+<Layout title={`전체 글 | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="Posts" pageDesc="All the articles I've posted.">
+  <Main
+    pageTitle="전체 글"
+    pageDesc="AI 변화의 핵심, 업무 적용 방법, 기술적 배경을 정리한 브리핑입니다."
+  >
     <ul>
       {page.data.map(data => <Card {...data} />)}
     </ul>

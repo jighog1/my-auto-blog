@@ -1,55 +1,119 @@
 ---
 import type { CollectionEntry } from "astro:content";
-import { slugifyStr } from "@/utils/slugify";
 import { getPath } from "@/utils/getPath";
 import Datetime from "./Datetime.astro";
+import getReadingTime from "@/utils/getReadingTime";
 
 type Props = {
   variant?: "h2" | "h3";
+  display?: "lead" | "list" | "compact";
 } & CollectionEntry<"blog">;
 
-const { variant: Heading = "h2", id, data, filePath } = Astro.props;
+const {
+  variant: Heading = "h2",
+  display = "list",
+  id,
+  data,
+  filePath,
+  body,
+} = Astro.props;
 
-const { title, description, author, ogImage, ...props } = data;
+const { title, description, tags, ogImage, ...props } = data;
+const readingMinutes = getReadingTime(body);
 
 // ogImage가 문자열이면 그대로 사용, 객체면 src 사용
 const thumbnailUrl = typeof ogImage === "string" ? ogImage : ogImage?.src;
 ---
 
-<li class="group card-hover glass my-6 overflow-hidden rounded-xl bg-muted/30">
-  <a
-    href={getPath(id, filePath)}
-    class="grid gap-8 p-6 sm:grid-cols-12"
+<li
+  class:list={[
+    "group border-border",
+    display === "lead" && "border bg-surface",
+    display === "list" && "border-t first:border-t-0",
+    display === "compact" && "border-t",
+  ]}
+>
+  <article
+    class:list={[
+      "grid gap-5",
+      display === "lead" && "p-5 sm:grid-cols-12 sm:gap-8 sm:p-8",
+      display === "list" && "py-6 sm:grid-cols-12 sm:py-7",
+      display === "compact" && "py-5",
+    ]}
   >
-    {thumbnailUrl && (
-      <div class="sm:col-span-4 overflow-hidden rounded-lg">
-        <img 
-          src={thumbnailUrl} 
-          alt={title} 
-          class="h-48 w-full object-cover grayscale-[0.2] transition-all duration-500 group-hover:scale-105 group-hover:grayscale-0 sm:h-full"
-        />
-      </div>
-    )}
-    <div class:list={["flex flex-col justify-center", thumbnailUrl ? "sm:col-span-8" : "sm:col-span-12"]}>
-      <Heading
-        transition:name={slugifyStr(title.replaceAll(".", "-"))}
-        class="text-xl font-bold tracking-tight text-foreground sm:text-2xl"
+    {
+      thumbnailUrl && (
+        <div
+          class:list={[
+            "overflow-hidden bg-muted",
+            display === "lead" ? "sm:col-span-5" : "sm:col-span-4",
+          ]}
+        >
+          <img
+            src={thumbnailUrl}
+            alt=""
+            class="h-48 w-full object-cover sm:h-full"
+            loading={display === "lead" ? "eager" : "lazy"}
+          />
+        </div>
+      )
+    }
+    <div
+      class:list={[
+        "flex min-w-0 flex-col justify-center",
+        thumbnailUrl
+          ? display === "lead"
+            ? "sm:col-span-7"
+            : "sm:col-span-8"
+          : "sm:col-span-12",
+      ]}
+    >
+      <div
+        class="mb-3 flex flex-wrap items-center gap-2 text-xs font-semibold text-muted-foreground"
       >
-        {title}
-      </Heading>
-      
-      <div class="mt-3 flex items-center gap-4 text-sm font-medium text-foreground/75">
-        <span class="flex items-center gap-1.5">
-          <span class="size-1.5 rounded-full bg-accent"></span>
-          {author}
-        </span>
-        <span>•</span>
-        <Datetime {...props} />
+        <span class="text-signal"
+          >{display === "lead" ? "오늘의 핵심" : "AI 브리핑"}</span
+        >
+        <span aria-hidden="true">·</span>
+        <span>약 {readingMinutes}분</span>
+        <span aria-hidden="true">·</span>
+        <Datetime {...props} hideIcon />
       </div>
+      <Heading
+        class:list={[
+          "font-extrabold tracking-[-0.025em] text-balance text-foreground",
+          display === "lead" ? "text-2xl sm:text-4xl" : "text-xl sm:text-2xl",
+          display === "compact" && "line-clamp-3",
+        ]}
+      >
+        <a
+          href={getPath(id, filePath)}
+          class="decoration-accent/30 underline-offset-4 hover:text-accent hover:underline"
+        >
+          {title}
+        </a>
+      </Heading>
 
-      <p class="mt-4 line-clamp-2 text-sm leading-relaxed text-foreground/80">
+      <p
+        class:list={[
+          "mt-3 text-muted-foreground",
+          display === "lead"
+            ? "line-clamp-3 text-base leading-7 sm:text-lg"
+            : "line-clamp-2 text-sm leading-6",
+        ]}
+      >
         {description}
       </p>
+
+      {
+        display !== "compact" && (
+          <div class="mt-5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {tags.slice(0, 2).map(tag => (
+              <span>#{tag}</span>
+            ))}
+          </div>
+        )
+      }
     </div>
-  </a>
+  </article>
 </li>
