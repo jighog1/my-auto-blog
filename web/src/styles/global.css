@@ -22,6 +22,16 @@
   button {
     @apply outline-offset-4 transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-accent;
   }
+
+  a[href],
+  button:not(:disabled) {
+    -webkit-tap-highlight-color: color-mix(
+      in srgb,
+      var(--accent) 18%,
+      transparent
+    );
+    touch-action: manipulation;
+  }
 }
 
 @utility app-layout {
@@ -60,6 +70,24 @@
 .mermaid .edgeLabel p {
   color: var(--foreground) !important;
   background-color: var(--diagram-edge-label) !important;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  :where(a[href], button:not(:disabled)) {
+    transition-duration: 120ms;
+    transition-property:
+      color, background-color, border-color, opacity, transform;
+    transition-timing-function: ease-out;
+  }
+
+  :where(a[href]:active) {
+    opacity: 0.68;
+  }
+
+  :where(button:not(:disabled):active) {
+    opacity: 0.72;
+    transform: scale(0.94);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

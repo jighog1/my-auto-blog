@@ -45,12 +45,13 @@ const slides = posts.map((post, index) => {
         <span data-slider-announcement>최근 글 1 / {slides.length}</span>
       </div>
 
-      <div>
+      <div class="grid overflow-hidden" data-slider-viewport>
         {slides.map(slide => (
           <article
-            class="grid items-center gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)] lg:gap-14"
+            class="col-start-1 row-start-1 grid items-center gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)] lg:gap-14"
             data-slider-slide
             data-slide-index={slide.index}
+            aria-hidden={slide.index === 0 ? "false" : "true"}
             hidden={slide.index !== 0}
           >
             <div class="flex min-w-0 flex-col lg:min-h-80 lg:justify-center">
@@ -156,14 +157,12 @@ const slides = posts.map((post, index) => {
         if (slides.length < 2 || !previous || !next) return;
 
         let activeIndex = 0;
+        let transitionId = 0;
+        const reducedMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        );
 
-        const showSlide = (nextIndex: number) => {
-          activeIndex = (nextIndex + slides.length) % slides.length;
-
-          slides.forEach((slide, index) => {
-            slide.hidden = index !== activeIndex;
-          });
-
+        const updatePosition = () => {
           const position = String(activeIndex + 1);
           if (current) current.textContent = position;
           if (announcement) {
@@ -171,8 +170,75 @@ const slides = posts.map((post, index) => {
           }
         };
 
-        previous.addEventListener("click", () => showSlide(activeIndex - 1));
-        next.addEventListener("click", () => showSlide(activeIndex + 1));
+        const showSlide = (nextIndex: number, direction: -1 | 1) => {
+          const normalizedIndex = (nextIndex + slides.length) % slides.length;
+          if (normalizedIndex === activeIndex) return;
+
+          const outgoing = slides[activeIndex];
+          const incoming = slides[normalizedIndex];
+          const currentTransitionId = ++transitionId;
+
+          slides.forEach((slide, index) => {
+            slide.getAnimations().forEach(animation => animation.cancel());
+            if (index !== activeIndex && index !== normalizedIndex) {
+              slide.hidden = true;
+              slide.setAttribute("aria-hidden", "true");
+            }
+          });
+
+          incoming.hidden = false;
+          incoming.setAttribute("aria-hidden", "false");
+          outgoing.setAttribute("aria-hidden", "true");
+          activeIndex = normalizedIndex;
+          updatePosition();
+
+          if (reducedMotion.matches) {
+            outgoing.hidden = true;
+            return;
+          }
+
+          const distance = direction * 24;
+          const options: KeyframeAnimationOptions = {
+            duration: 180,
+            easing: "cubic-bezier(0.2, 0, 0, 1)",
+            fill: "forwards",
+          };
+          const outgoingAnimation = outgoing.animate(
+            [
+              { opacity: 1, transform: "translate3d(0, 0, 0)" },
+              {
+                opacity: 0,
+                transform: `translate3d(${-distance}px, 0, 0)`,
+              },
+            ],
+            options
+          );
+          const incomingAnimation = incoming.animate(
+            [
+              {
+                opacity: 0,
+                transform: `translate3d(${distance}px, 0, 0)`,
+              },
+              { opacity: 1, transform: "translate3d(0, 0, 0)" },
+            ],
+            options
+          );
+
+          Promise.allSettled([
+            outgoingAnimation.finished,
+            incomingAnimation.finished,
+          ]).then(() => {
+            if (transitionId !== currentTransitionId) return;
+            outgoing.hidden = true;
+            outgoingAnimation.cancel();
+            incomingAnimation.cancel();
+          });
+        };
+
+        previous.addEventListener("click", () =>
+          showSlide(activeIndex - 1, -1)
+        );
+        next.addEventListener("click", () => showSlide(activeIndex + 1, 1));
 
         slider.dataset.sliderReady = "true";
       });
