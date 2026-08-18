@@ -35,39 +35,68 @@ const WORK_SIGNAL_GROUPS = [
       "콘텐츠 제작",
     ],
   },
-  { weight: 4, signals: ["개발 생산성", "코딩", "보안"] },
+  { weight: 6, signals: ["개발 생산성"] },
+  { weight: 4, signals: ["코딩", "보안"] },
 ] as const;
+
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const WORK_RELEVANCE_THRESHOLD = 5;
+const ROTATION_GRACE_DAYS = 3;
+const MAX_ROTATION_PENALTY = 6;
 
 const normalize = (value: string) => value.toLocaleLowerCase("ko-KR");
 
-export const getWorkRelevanceScore = ({ data }: BlogPost) => {
-  const primarySignals = normalize([data.title, ...data.tags].join(" "));
-  const description = normalize(data.description);
-
-  return WORK_SIGNAL_GROUPS.reduce((score, { signals, weight }) => {
+const scoreSignals = (text: string, descriptionOnly = false) =>
+  WORK_SIGNAL_GROUPS.reduce((score, { signals, weight }) => {
     const normalizedSignals = signals.map(normalize);
 
-    if (normalizedSignals.some(signal => primarySignals.includes(signal))) {
-      return score + weight;
-    }
-    if (normalizedSignals.some(signal => description.includes(signal))) {
-      return score + 1;
-    }
-    return score;
+    return normalizedSignals.some(signal => text.includes(signal))
+      ? score + (descriptionOnly ? 1 : weight)
+      : score;
   }, 0);
+
+export const getPrimaryWorkRelevanceScore = ({ data }: BlogPost) =>
+  scoreSignals(normalize([data.title, ...data.tags].join(" ")));
+
+export const getWorkRelevanceScore = (post: BlogPost) =>
+  getPrimaryWorkRelevanceScore(post) +
+  scoreSignals(normalize(post.data.description), true);
+
+export const getWorkRotationPenalty = (
+  { data }: BlogPost,
+  referenceDate: Date
+) => {
+  const ageInDays = Math.max(
+    0,
+    Math.floor(
+      (referenceDate.getTime() - data.pubDatetime.getTime()) / DAY_IN_MS
+    )
+  );
+
+  return Math.min(
+    Math.max(ageInDays - ROTATION_GRACE_DAYS, 0),
+    MAX_ROTATION_PENALTY
+  );
 };
 
 export const getWorkRelevantPosts = (
   posts: BlogPost[],
-  limit = 3
+  limit = 3,
+  referenceDate = new Date()
 ): BlogPost[] =>
   posts
     .map((post, recencyIndex) => ({
       post,
       recencyIndex,
       score: getWorkRelevanceScore(post),
+      primaryScore: getPrimaryWorkRelevanceScore(post),
+      rotationPenalty: getWorkRotationPenalty(post, referenceDate),
     }))
-    .filter(({ score }) => score >= 5)
-    .sort((a, b) => b.score - a.score || a.recencyIndex - b.recencyIndex)
+    .filter(({ primaryScore }) => primaryScore >= WORK_RELEVANCE_THRESHOLD)
+    .sort(
+      (a, b) =>
+        b.score - b.rotationPenalty - (a.score - a.rotationPenalty) ||
+        a.recencyIndex - b.recencyIndex
+    )
     .slice(0, limit)
     .map(({ post }) => post);
