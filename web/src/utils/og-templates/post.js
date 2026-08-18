@@ -11,7 +11,7 @@ export default async post => {
     month: "long",
     day: "numeric",
   }).format(post.data.pubDatetime);
-  const fontText = `${SITE.title}${SITE.tagline}${post.data.title}${author}${date}`;
+  const fontText = `AI BRIEFING${SITE.title}${SITE.tagline}${post.data.title}${author}${date}`;
 
   return satori(
     {
