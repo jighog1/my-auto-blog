@@ -7,6 +7,8 @@ import { getPath } from "@/utils/getPath";
 import getReadingTime from "@/utils/getReadingTime";
 import { SITE } from "@/config";
 
+const DYNAMIC_OG_VERSION = "2";
+
 type Props = {
   posts: CollectionEntry<"blog">[];
 };
@@ -22,7 +24,11 @@ const slides = posts.map((post, index) => {
     ...post,
     index,
     path,
-    image: explicitImage || (SITE.dynamicOgImage ? `${path}/index.png` : null),
+    image:
+      explicitImage ||
+      (SITE.dynamicOgImage
+        ? `${path}/index.png?v=${DYNAMIC_OG_VERSION}`
+        : null),
     readingMinutes: getReadingTime(post.body),
   };
 });
