@@ -75,6 +75,11 @@ export default defineConfig({
   },
   env: {
     schema: {
+      PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN: envField.string({
+        access: "public",
+        context: "client",
+        optional: true,
+      }),
       PUBLIC_GOOGLE_SITE_VERIFICATION: envField.string({
         access: "public",
         context: "client",

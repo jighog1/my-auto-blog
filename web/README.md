@@ -144,6 +144,14 @@ PUBLIC_GOOGLE_SITE_VERIFICATION=your-google-site-verification-value
 
 > See [this discussion](https://github.com/satnaing/astro-paper/discussions/334#discussioncomment-10139247) for adding AstroPaper to the Google Search Console.
 
+## Cloudflare Web Analytics (optional)
+
+Add the site token issued for your hostname to the environment before building. If the value is absent, the analytics beacon is not rendered.
+
+```bash
+PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN=your-cloudflare-site-token
+```
+
 ## 🧞 Commands
 
 All commands are run from the root of the project, from a terminal:
