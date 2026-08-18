@@ -5,18 +5,19 @@ import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import Card from "@/components/Card.astro";
+import RecentPostsSlider from "@/components/RecentPostsSlider.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
 import { getWorkRelevantPosts } from "@/utils/getWorkRelevantPosts";
-import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import { getPath } from "@/utils/getPath";
 import { SITE } from "@/config";
 
 const posts = await getCollection("blog");
 
 const sortedPosts = getSortedPosts(posts);
 const publishedPosts = sortedPosts.filter(({ data }) => !data.draft);
-const primaryPost = publishedPosts[0];
-const workPosts = getWorkRelevantPosts(publishedPosts.slice(1), 3);
+const featuredPosts = publishedPosts.slice(0, 3);
+const workPosts = getWorkRelevantPosts(publishedPosts, 3);
 const latestPosts = publishedPosts.slice(0, SITE.postPerIndex);
 ---
 
@@ -28,120 +29,77 @@ const latestPosts = publishedPosts.slice(0, SITE.postPerIndex);
     data-base-url={import.meta.env.BASE_URL}
     class="app-layout"
   >
-    <section
-      id="hero"
-      class="grid gap-8 border-b border-border py-10 md:grid-cols-[minmax(0,1.35fr)_minmax(17rem,0.65fr)] md:items-end md:py-14"
-    >
-      <div>
-        <p class="text-sm font-bold text-signal">{SITE.tagline}</p>
-        <h1
-          class="mt-4 max-w-3xl text-4xl leading-[1.14] font-black tracking-[-0.045em] text-balance sm:text-5xl lg:text-6xl"
-        >
-          오늘의 AI 변화,<br />일의 언어로 정리합니다.
-        </h1>
-      </div>
-      <div class="md:pb-1">
-        <p
-          class="max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8"
-        >
-          중요한 변화의 핵심과 업무 적용 지점, 확인 가능한 원문을 한 번에
-          살펴보세요.
-        </p>
-        <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
-          <a
-            href="#today-briefing"
-            class="inline-flex min-h-11 items-center bg-accent px-5 py-2.5 text-sm font-bold text-background hover:opacity-90"
-          >
-            오늘의 브리핑 보기
-          </a>
-          <a
-            target="_blank"
-            href={`${import.meta.env.BASE_URL}rss.xml`}
-            class="flex min-h-11 items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-accent"
-            aria-label="RSS 피드 구독"
-            title="RSS 피드"
-          >
-            <IconRss width={20} height={20} class="stroke-3" />
-            RSS 구독
-          </a>
-        </div>
-      </div>
-    </section>
+    <h1 class="sr-only">AI 브리핑룸 최근 글과 전체 아티클</h1>
 
-    {
-      primaryPost && (
-        <section id="today-briefing" class="py-12 sm:py-16">
-          <div class="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <p class="text-sm font-bold text-signal">TODAY</p>
-              <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
-                오늘의 대표 글
-              </h2>
-            </div>
-            <span class="hidden text-sm text-muted-foreground sm:block">
-              핵심부터 적용 포인트까지
-            </span>
-          </div>
-          <ul>
-            <Card variant="h3" display="lead" {...primaryPost} />
-          </ul>
-        </section>
-      )
-    }
-
-    {
-      workPosts.length > 0 && (
-        <section
-          id="work-briefing"
-          class="border-y border-border py-12 sm:py-14"
-        >
-          <div class="mb-5 max-w-2xl">
-            <p class="text-sm font-bold text-signal">업무 활용</p>
-            <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
-              바로 써볼 수 있는 AI 아이디어
-            </h2>
-            <p class="mt-2 text-sm leading-6 text-muted-foreground">
-              최신 순번이 아니라 제목과 태그에서 업무 활용 신호가 분명한 글을
-              골랐습니다.
-            </p>
-          </div>
-          <ul class="grid gap-x-8 md:grid-cols-3">
-            {workPosts.map(data => (
-              <Card variant="h3" display="compact" {...data} />
-            ))}
-          </ul>
-        </section>
-      )
-    }
+    <RecentPostsSlider posts={featuredPosts} />
 
     {
       latestPosts.length > 0 && (
-        <section id="recent-posts" class="py-12 sm:py-16">
-          <div class="mb-4 flex items-end justify-between gap-4">
-            <div>
-              <p class="text-sm font-bold text-accent">전체 최신 글</p>
-              <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
-                새로 올라온 순서대로
+        <div class="grid items-start gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-14">
+          <section id="recent-posts" class="min-w-0">
+            <div class="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <h2 class="text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">
+                  전체 아티클
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-muted-foreground">
+                  새로 발행된 순서대로 모든 브리핑을 확인하세요.
+                </p>
+              </div>
+              <LinkButton
+                href={`${import.meta.env.BASE_URL}posts/`}
+                class="shrink-0 text-sm font-semibold text-accent"
+              >
+                전체 글
+                <IconArrowRight class="inline-block rtl:-rotate-180" />
+              </LinkButton>
+            </div>
+            <ul>
+              {latestPosts.map(data => (
+                <Card variant="h3" {...data} />
+              ))}
+            </ul>
+          </section>
+
+          {workPosts.length > 0 && (
+            <aside
+              id="work-briefing"
+              class="rounded-xl bg-muted p-5 sm:p-6 lg:sticky lg:top-24"
+              aria-labelledby="work-heading"
+            >
+              <p class="text-sm font-bold text-signal">업무 활용</p>
+              <h2
+                id="work-heading"
+                class="mt-1 text-2xl font-extrabold tracking-[-0.025em]"
+              >
+                WORK
               </h2>
               <p class="mt-2 text-sm leading-6 text-muted-foreground">
-                대표·추천 영역에 나온 글도 빠짐없이 시간순으로 확인할 수
-                있습니다.
+                최신순이 아닌, 바로 써볼 업무 아이디어를 골랐습니다.
               </p>
-            </div>
-            <LinkButton
-              href={`${import.meta.env.BASE_URL}posts/`}
-              class="text-sm font-semibold text-accent"
-            >
-              전체 글
-              <IconArrowRight class="inline-block rtl:-rotate-180" />
-            </LinkButton>
-          </div>
-          <ul>
-            {latestPosts.map(data => (
-              <Card variant="h3" {...data} />
-            ))}
-          </ul>
-        </section>
+              <ol class="mt-5 divide-y divide-border">
+                {workPosts.map((post, index) => (
+                  <li class="py-4 first:pt-0 last:pb-0">
+                    <a
+                      href={getPath(post.id, post.filePath)}
+                      class="group grid min-h-11 grid-cols-[2rem_minmax(0,1fr)] gap-3"
+                    >
+                      <span
+                        class="flex size-8 items-center justify-center rounded-md bg-surface text-sm font-extrabold text-accent"
+                        aria-hidden="true"
+                      >
+                        {index + 1}
+                      </span>
+                      <span class="pt-1 text-sm leading-6 font-bold text-foreground underline-offset-4 group-hover:text-accent group-hover:underline">
+                        {post.data.title}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </aside>
+          )}
+        </div>
       )
     }
 

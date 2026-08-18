@@ -1,0 +1,177 @@
+---
+import type { CollectionEntry } from "astro:content";
+import Datetime from "./Datetime.astro";
+import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
+import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
+import { getPath } from "@/utils/getPath";
+import getReadingTime from "@/utils/getReadingTime";
+import { SITE } from "@/config";
+
+type Props = {
+  posts: CollectionEntry<"blog">[];
+};
+
+const { posts } = Astro.props;
+
+const slides = posts.map((post, index) => {
+  const path = getPath(post.id, post.filePath);
+  const { ogImage } = post.data;
+  const explicitImage = typeof ogImage === "string" ? ogImage : ogImage?.src;
+
+  return {
+    ...post,
+    index,
+    path,
+    image: explicitImage || (SITE.dynamicOgImage ? `${path}/index.png` : null),
+    readingMinutes: getReadingTime(post.body),
+  };
+});
+---
+
+{
+  slides.length > 0 && (
+    <section
+      class="border-b border-border py-10 sm:py-14 lg:py-16"
+      aria-label="최근 글"
+      data-recent-posts-slider
+    >
+      <div class="sr-only" aria-live="polite" aria-atomic="true">
+        <span data-slider-announcement>최근 글 1 / {slides.length}</span>
+      </div>
+
+      <div>
+        {slides.map(slide => (
+          <article
+            class="grid items-center gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(28rem,1.1fr)] lg:gap-14"
+            data-slider-slide
+            data-slide-index={slide.index}
+            hidden={slide.index !== 0}
+          >
+            <div class="flex min-w-0 flex-col lg:min-h-80 lg:justify-center">
+              <div class="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                <span class="font-bold text-signal">최근 브리핑</span>
+                <Datetime
+                  pubDatetime={slide.data.pubDatetime}
+                  modDatetime={slide.data.modDatetime}
+                  hideIcon
+                />
+                <span aria-hidden="true">·</span>
+                <span>{slide.readingMinutes}분</span>
+              </div>
+              <h2 class="text-3xl leading-[1.2] font-black tracking-[-0.04em] text-balance break-keep sm:text-4xl lg:text-[2.75rem]">
+                <a
+                  href={slide.path}
+                  class="underline-offset-4 hover:text-accent hover:underline focus-visible:text-accent"
+                >
+                  {slide.data.title}
+                </a>
+              </h2>
+              <p class="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+                {slide.data.description}
+              </p>
+            </div>
+
+            {slide.image && (
+              <a
+                href={slide.path}
+                class="group block overflow-hidden rounded-xl bg-muted focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                aria-hidden="true"
+                tabindex="-1"
+              >
+                <img
+                  src={slide.image}
+                  alt=""
+                  class="aspect-[16/9] w-full object-cover transition-transform duration-200 motion-reduce:transition-none lg:group-hover:scale-[1.01]"
+                  loading={slide.index === 0 ? "eager" : "lazy"}
+                  fetchpriority={slide.index === 0 ? "high" : "auto"}
+                />
+              </a>
+            )}
+          </article>
+        ))}
+      </div>
+
+      {slides.length > 1 && (
+        <div
+          class="mt-7 flex items-center gap-3 lg:mt-0"
+          role="group"
+          aria-label="최근 글 탐색"
+        >
+          <button
+            type="button"
+            class="inline-flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors duration-150 hover:bg-border hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none"
+            aria-label="이전 최근 글"
+            data-slider-previous
+          >
+            <IconChevronLeft aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            class="inline-flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground transition-colors duration-150 hover:bg-border hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none"
+            aria-label="다음 최근 글"
+            data-slider-next
+          >
+            <IconChevronRight aria-hidden="true" />
+          </button>
+          <span
+            class="ml-1 text-sm font-semibold text-muted-foreground"
+            aria-hidden="true"
+          >
+            <span data-slider-current>1</span> / {slides.length}
+          </span>
+        </div>
+      )}
+    </section>
+  )
+}
+
+<script>
+  function initializeRecentPostsSliders() {
+    document
+      .querySelectorAll<HTMLElement>("[data-recent-posts-slider]")
+      .forEach(slider => {
+        if (slider.dataset.sliderReady === "true") return;
+
+        const slides = Array.from(
+          slider.querySelectorAll<HTMLElement>("[data-slider-slide]")
+        );
+        const current = slider.querySelector<HTMLElement>(
+          "[data-slider-current]"
+        );
+        const announcement = slider.querySelector<HTMLElement>(
+          "[data-slider-announcement]"
+        );
+        const previous = slider.querySelector<HTMLButtonElement>(
+          "[data-slider-previous]"
+        );
+        const next =
+          slider.querySelector<HTMLButtonElement>("[data-slider-next]");
+
+        if (slides.length < 2 || !previous || !next) return;
+
+        let activeIndex = 0;
+
+        const showSlide = (nextIndex: number) => {
+          activeIndex = (nextIndex + slides.length) % slides.length;
+
+          slides.forEach((slide, index) => {
+            slide.hidden = index !== activeIndex;
+          });
+
+          const position = String(activeIndex + 1);
+          if (current) current.textContent = position;
+          if (announcement) {
+            announcement.textContent = `최근 글 ${position} / ${slides.length}`;
+          }
+        };
+
+        previous.addEventListener("click", () => showSlide(activeIndex - 1));
+        next.addEventListener("click", () => showSlide(activeIndex + 1));
+
+        slider.dataset.sliderReady = "true";
+      });
+  }
+
+  initializeRecentPostsSliders();
+  document.addEventListener("astro:page-load", initializeRecentPostsSliders);
+</script>
