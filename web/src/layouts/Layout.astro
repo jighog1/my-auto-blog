@@ -206,29 +206,149 @@ const structuredDataJSON = JSON.stringify(structuredData).replaceAll(
     <script src="../scripts/theme.ts"></script>
 
     <script>
-      async function renderMermaid() {
-        const nodes = Array.from(
-          document.querySelectorAll<HTMLElement>(
-            ".mermaid:not([data-processed])"
-          )
-        );
-        if (nodes.length === 0) return;
+      const mermaidSources = new WeakMap<HTMLElement, string>();
+      let mermaidRendering = false;
+      let mermaidRerenderRequested = false;
 
-        const { default: mermaid } = await import("mermaid");
-        mermaid.initialize({
-          startOnLoad: false,
-          securityLevel: "strict",
-          theme: "neutral",
-          fontFamily: "var(--font-app)",
+      const getThemeToken = (name: string) =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue(name)
+          .trim();
+
+      const parseRgb = (color: string): [number, number, number] | null => {
+        const values = color.match(/[\d.]+/g)?.map(Number);
+        return values && values.length >= 3
+          ? [values[0], values[1], values[2]]
+          : null;
+      };
+
+      const relativeLuminance = ([red, green, blue]: [
+        number,
+        number,
+        number,
+      ]) => {
+        const channels = [red, green, blue].map(value => {
+          const channel = value / 255;
+          return channel <= 0.04045
+            ? channel / 12.92
+            : ((channel + 0.055) / 1.055) ** 2.4;
         });
+        return (
+          channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
+        );
+      };
+
+      function applyMermaidNodeContrast(nodes: HTMLElement[]) {
+        const darkText = getThemeToken("--diagram-text-dark");
+        const lightText = getThemeToken("--diagram-text-light");
+
+        nodes.forEach(diagram => {
+          diagram.querySelectorAll<SVGGElement>("g.node").forEach(node => {
+            const shape = node.querySelector<SVGElement>(
+              "rect, polygon, circle, ellipse, path"
+            );
+            if (!shape) return;
+
+            const fill = parseRgb(getComputedStyle(shape).fill);
+            if (!fill) return;
+
+            const luminance = relativeLuminance(fill);
+            const darkContrast = (luminance + 0.05) / 0.05;
+            const lightContrast = 1.05 / (luminance + 0.05);
+            node.style.setProperty(
+              "--diagram-node-text",
+              darkContrast >= lightContrast ? darkText : lightText
+            );
+          });
+        });
+      }
+
+      async function renderMermaid(reset = false) {
+        if (mermaidRendering) {
+          mermaidRerenderRequested ||= reset;
+          return;
+        }
+
+        mermaidRendering = true;
+        const allNodes = Array.from(
+          document.querySelectorAll<HTMLElement>(".mermaid")
+        );
+
         try {
+          allNodes.forEach(node => {
+            if (
+              !mermaidSources.has(node) &&
+              !node.hasAttribute("data-processed")
+            ) {
+              mermaidSources.set(node, node.textContent?.trim() ?? "");
+            }
+
+            if (reset) {
+              const source = mermaidSources.get(node);
+              if (source === undefined) return;
+              node.removeAttribute("data-processed");
+              node.removeAttribute("data-render-error");
+              node.replaceChildren(source);
+            }
+          });
+
+          const nodes = allNodes.filter(
+            node => !node.hasAttribute("data-processed")
+          );
+          if (nodes.length === 0) return;
+
+          const { default: mermaid } = await import("mermaid");
+          const foreground = getThemeToken("--foreground");
+          const border = getThemeToken("--border");
+          const node = getThemeToken("--diagram-node");
+          const secondary = getThemeToken("--diagram-secondary");
+          const cluster = getThemeToken("--diagram-cluster");
+          const edgeLabel = getThemeToken("--diagram-edge-label");
+
+          mermaid.initialize({
+            startOnLoad: false,
+            securityLevel: "strict",
+            theme: "base",
+            fontFamily: "var(--font-app)",
+            themeVariables: {
+              background: getThemeToken("--background"),
+              primaryColor: node,
+              primaryTextColor: foreground,
+              primaryBorderColor: border,
+              secondaryColor: secondary,
+              secondaryTextColor: foreground,
+              secondaryBorderColor: border,
+              tertiaryColor: cluster,
+              tertiaryTextColor: foreground,
+              tertiaryBorderColor: border,
+              lineColor: getThemeToken("--muted-foreground"),
+              textColor: foreground,
+              mainBkg: node,
+              nodeBorder: border,
+              clusterBkg: cluster,
+              clusterBorder: border,
+              titleColor: foreground,
+              edgeLabelBackground: edgeLabel,
+            },
+          });
+
           await mermaid.run({ nodes });
+          applyMermaidNodeContrast(nodes);
         } catch {
-          nodes.forEach(node => node.setAttribute("data-render-error", "true"));
+          allNodes.forEach(node =>
+            node.setAttribute("data-render-error", "true")
+          );
+        } finally {
+          mermaidRendering = false;
+          if (mermaidRerenderRequested) {
+            mermaidRerenderRequested = false;
+            void renderMermaid(true);
+          }
         }
       }
 
-      document.addEventListener("astro:page-load", renderMermaid);
+      document.addEventListener("astro:page-load", () => renderMermaid());
+      document.addEventListener("theme:change", () => renderMermaid(true));
       void renderMermaid();
     </script>
   </body>

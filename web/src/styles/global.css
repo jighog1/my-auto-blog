@@ -50,6 +50,17 @@
 .mermaid svg {
   @apply h-auto max-w-full;
 }
+.mermaid .node .nodeLabel {
+  color: var(--diagram-node-text, var(--foreground)) !important;
+}
+.mermaid .node text {
+  fill: var(--diagram-node-text, var(--foreground)) !important;
+}
+.mermaid .edgeLabel,
+.mermaid .edgeLabel p {
+  color: var(--foreground) !important;
+  background-color: var(--diagram-edge-label) !important;
+}
 
 @media (prefers-reduced-motion: reduce) {
   html {
