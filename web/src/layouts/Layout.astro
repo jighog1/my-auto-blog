@@ -1,7 +1,10 @@
 ---
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
-import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
+import {
+  PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN,
+  PUBLIC_GOOGLE_SITE_VERIFICATION,
+} from "astro:env/client";
 import { SITE } from "@/config";
 import "@/styles/global.css";
 
@@ -64,6 +67,9 @@ const structuredDataJSON = JSON.stringify(structuredData).replaceAll(
   "<",
   "\\u003c"
 );
+const cloudflareWebAnalyticsConfig = JSON.stringify({
+  token: PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN,
+});
 ---
 
 <!doctype html>
@@ -201,6 +207,17 @@ const structuredDataJSON = JSON.stringify(structuredData).replaceAll(
   </head>
   <body>
     <slot />
+
+    {
+      PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN && (
+        <script
+          type="module"
+          is:inline
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={cloudflareWebAnalyticsConfig}
+        />
+      )
+    }
 
     <!-- Load full theme logic -->
     <script src="../scripts/theme.ts"></script>

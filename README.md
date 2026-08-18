@@ -20,8 +20,11 @@
 
 - `GEMINI_API_KEY` (필수): Google Gemini API 키
 - `GEMINI_MODEL` (선택): 우선 사용할 안정 텍스트 모델. 저장소 Actions 변수 또는 로컬 환경변수로 설정합니다. 호환되지 않으면 자동으로 무시됩니다.
+- `PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN` (웹 빌드 선택): Cloudflare Web Analytics 사이트 토큰
 
 GitHub 저장소에는 `GEMINI_API_KEY`를 Actions secret으로 등록해야 합니다. 자동 PR 생성과 병합에는 워크플로의 `contents: write`, `pull-requests: write` 권한이 사용됩니다.
+
+운영 방문 통계를 활성화하려면 Cloudflare Web Analytics에서 `fivejh.com` 사이트를 추가하고, 발급된 사이트 토큰을 GitHub Actions 변수 `CLOUDFLARE_WEB_ANALYTICS_TOKEN`으로 등록합니다. 토큰이 없는 빌드에는 분석 스크립트가 포함되지 않습니다.
 
 ## 로컬 실행 및 검증
 
