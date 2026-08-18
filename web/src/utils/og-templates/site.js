@@ -87,10 +87,11 @@ export default async () =>
       height: 630,
       embedFont: true,
       fonts: await loadGoogleFonts(
-        SITE.title +
+        "AI BRIEFING ROOM" +
+          SITE.title +
           SITE.tagline +
           SITE.website +
-          "30초 핵심 업무 적용 원문 확인"
+          "30초 핵심 · 업무 적용 · 원문 확인"
       ),
     }
   );
