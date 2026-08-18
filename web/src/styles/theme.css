@@ -8,6 +8,12 @@
   --signal: #0c6b5d;
   --signal-surface: #e3f3ee;
   --border: #d9d6cd;
+  --diagram-node: #eef3fb;
+  --diagram-secondary: #e3f3ee;
+  --diagram-cluster: #eeece5;
+  --diagram-edge-label: #fffdfa;
+  --diagram-text-dark: #111417;
+  --diagram-text-light: #f7f6f2;
 }
 
 html[data-theme="dark"] {
@@ -20,6 +26,12 @@ html[data-theme="dark"] {
   --signal: #79d8c7;
   --signal-surface: #163630;
   --border: #343a40;
+  --diagram-node: #202b3b;
+  --diagram-secondary: #163630;
+  --diagram-cluster: #24292e;
+  --diagram-edge-label: #181c20;
+  --diagram-text-dark: #111417;
+  --diagram-text-light: #f7f6f2;
 }
 
 @theme {

@@ -55,6 +55,10 @@ function reflectPreference(): void {
       .querySelector("meta[name='theme-color']")
       ?.setAttribute("content", bgColor);
   }
+
+  document.dispatchEvent(
+    new CustomEvent("theme:change", { detail: { theme: themeValue } })
+  );
 }
 
 // Update the global theme API

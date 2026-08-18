@@ -6,6 +6,7 @@ import Footer from "@/components/Footer.astro";
 import LinkButton from "@/components/LinkButton.astro";
 import Card from "@/components/Card.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
+import { getWorkRelevantPosts } from "@/utils/getWorkRelevantPosts";
 import IconRss from "@/assets/icons/IconRss.svg";
 import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
 import { SITE } from "@/config";
@@ -15,8 +16,8 @@ const posts = await getCollection("blog");
 const sortedPosts = getSortedPosts(posts);
 const publishedPosts = sortedPosts.filter(({ data }) => !data.draft);
 const primaryPost = publishedPosts[0];
-const briefingPosts = publishedPosts.slice(1, 4);
-const latestPosts = publishedPosts.slice(4, SITE.postPerIndex);
+const workPosts = getWorkRelevantPosts(publishedPosts.slice(1), 3);
+const latestPosts = publishedPosts.slice(0, SITE.postPerIndex);
 ---
 
 <Layout>
@@ -29,22 +30,24 @@ const latestPosts = publishedPosts.slice(4, SITE.postPerIndex);
   >
     <section
       id="hero"
-      class="grid gap-10 border-b border-border py-12 md:grid-cols-[minmax(0,1.5fr)_minmax(16rem,0.7fr)] md:items-end md:py-16"
+      class="grid gap-8 border-b border-border py-10 md:grid-cols-[minmax(0,1.35fr)_minmax(17rem,0.65fr)] md:items-end md:py-14"
     >
       <div>
-        <p class="text-sm font-bold text-accent">{SITE.tagline}</p>
+        <p class="text-sm font-bold text-signal">{SITE.tagline}</p>
         <h1
-          class="mt-4 max-w-3xl text-4xl leading-[1.15] font-black tracking-[-0.045em] text-balance sm:text-6xl"
+          class="mt-4 max-w-3xl text-4xl leading-[1.14] font-black tracking-[-0.045em] text-balance sm:text-5xl lg:text-6xl"
         >
-          AI를 빠르게 읽고,<br />일에 바로 연결하세요.
+          오늘의 AI 변화,<br />일의 언어로 정리합니다.
         </h1>
+      </div>
+      <div class="md:pb-1">
         <p
-          class="mt-6 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8"
+          class="max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8"
         >
-          중요한 변화만 골라 30초 핵심, 업무 적용 아이디어, 확인 가능한 원문으로
-          정리합니다.
+          중요한 변화의 핵심과 업무 적용 지점, 확인 가능한 원문을 한 번에
+          살펴보세요.
         </p>
-        <div class="mt-7 flex flex-wrap items-center gap-5">
+        <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
           <a
             href="#today-briefing"
             class="inline-flex min-h-11 items-center bg-accent px-5 py-2.5 text-sm font-bold text-background hover:opacity-90"
@@ -63,20 +66,6 @@ const latestPosts = publishedPosts.slice(4, SITE.postPerIndex);
           </a>
         </div>
       </div>
-      <ol
-        class="border-s border-border ps-5 text-sm text-muted-foreground sm:ps-6"
-      >
-        <li class="border-b border-border py-3">
-          <strong class="me-2 text-foreground">01</strong>30초 안에 핵심 파악
-        </li>
-        <li class="border-b border-border py-3">
-          <strong class="me-2 text-foreground">02</strong>내 업무의 적용 지점
-          확인
-        </li>
-        <li class="py-3">
-          <strong class="me-2 text-foreground">03</strong>원문에서 사실 검증
-        </li>
-      </ol>
     </section>
 
     {
@@ -86,7 +75,7 @@ const latestPosts = publishedPosts.slice(4, SITE.postPerIndex);
             <div>
               <p class="text-sm font-bold text-signal">TODAY</p>
               <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
-                오늘 꼭 볼 AI 이슈
+                오늘의 대표 글
               </h2>
             </div>
             <span class="hidden text-sm text-muted-foreground sm:block">
@@ -101,23 +90,23 @@ const latestPosts = publishedPosts.slice(4, SITE.postPerIndex);
     }
 
     {
-      briefingPosts.length > 0 && (
+      workPosts.length > 0 && (
         <section
           id="work-briefing"
           class="border-y border-border py-12 sm:py-14"
         >
           <div class="mb-5 max-w-2xl">
-            <p class="text-sm font-bold text-signal">WORK</p>
+            <p class="text-sm font-bold text-signal">업무 활용</p>
             <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
-              업무에 가져갈 AI 이슈
+              바로 써볼 수 있는 AI 아이디어
             </h2>
             <p class="mt-2 text-sm leading-6 text-muted-foreground">
-              설명만 읽어도 변화의 맥락을 잡고, 필요한 글만 깊게 살펴볼 수
-              있습니다.
+              최신 순번이 아니라 제목과 태그에서 업무 활용 신호가 분명한 글을
+              골랐습니다.
             </p>
           </div>
           <ul class="grid gap-x-8 md:grid-cols-3">
-            {briefingPosts.map(data => (
+            {workPosts.map(data => (
               <Card variant="h3" display="compact" {...data} />
             ))}
           </ul>
@@ -130,10 +119,14 @@ const latestPosts = publishedPosts.slice(4, SITE.postPerIndex);
         <section id="recent-posts" class="py-12 sm:py-16">
           <div class="mb-4 flex items-end justify-between gap-4">
             <div>
-              <p class="text-sm font-bold text-accent">LATEST</p>
+              <p class="text-sm font-bold text-accent">전체 최신 글</p>
               <h2 class="mt-1 text-2xl font-extrabold tracking-[-0.025em] sm:text-3xl">
-                최신 분석
+                새로 올라온 순서대로
               </h2>
+              <p class="mt-2 text-sm leading-6 text-muted-foreground">
+                대표·추천 영역에 나온 글도 빠짐없이 시간순으로 확인할 수
+                있습니다.
+              </p>
             </div>
             <LinkButton
               href={`${import.meta.env.BASE_URL}posts/`}
