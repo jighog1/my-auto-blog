@@ -36,35 +36,10 @@ const latestPosts = publishedPosts.slice(0, SITE.postPerIndex);
     {
       latestPosts.length > 0 && (
         <div class="grid items-start gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-14">
-          <section id="recent-posts" class="min-w-0">
-            <div class="mb-5 flex items-end justify-between gap-4">
-              <div>
-                <h2 class="text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">
-                  전체 아티클
-                </h2>
-                <p class="mt-2 text-sm leading-6 text-muted-foreground">
-                  새로 발행된 순서대로 모든 브리핑을 확인하세요.
-                </p>
-              </div>
-              <LinkButton
-                href={`${import.meta.env.BASE_URL}posts/`}
-                class="shrink-0 text-sm font-semibold text-accent"
-              >
-                전체 글
-                <IconArrowRight class="inline-block rtl:-rotate-180" />
-              </LinkButton>
-            </div>
-            <ul>
-              {latestPosts.map(data => (
-                <Card variant="h3" {...data} />
-              ))}
-            </ul>
-          </section>
-
           {workPosts.length > 0 && (
             <aside
               id="work-briefing"
-              class="rounded-xl bg-muted p-5 sm:p-6 lg:sticky lg:top-24"
+              class="rounded-xl bg-muted p-5 sm:p-6 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1"
               aria-labelledby="work-heading"
             >
               <p class="text-sm font-bold text-signal">업무 활용</p>
@@ -99,6 +74,34 @@ const latestPosts = publishedPosts.slice(0, SITE.postPerIndex);
               </ol>
             </aside>
           )}
+
+          <section
+            id="recent-posts"
+            class="min-w-0 lg:col-start-1 lg:row-start-1"
+          >
+            <div class="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <h2 class="text-3xl font-extrabold tracking-[-0.035em] sm:text-4xl">
+                  전체 아티클
+                </h2>
+                <p class="mt-2 text-sm leading-6 text-muted-foreground">
+                  새로 발행된 순서대로 모든 브리핑을 확인하세요.
+                </p>
+              </div>
+              <LinkButton
+                href={`${import.meta.env.BASE_URL}posts/`}
+                class="shrink-0 text-sm font-semibold text-accent"
+              >
+                전체 글
+                <IconArrowRight class="inline-block rtl:-rotate-180" />
+              </LinkButton>
+            </div>
+            <ul>
+              {latestPosts.map(data => (
+                <Card variant="h3" {...data} />
+              ))}
+            </ul>
+          </section>
         </div>
       )
     }
