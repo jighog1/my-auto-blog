@@ -4,7 +4,7 @@ import os
 import re
 
 from dotenv import load_dotenv
-from google import genai
+from openai import OpenAI
 
 import collector
 
@@ -19,38 +19,27 @@ CATEGORIES = {
     "IT/AI/Security": "긱뉴스 및 깃허브 상위 랭크 기반 최신 기술 동향"
 }
 
-# Google 공식 문서에서 Stable로 명시된 텍스트 출력 모델만 허용합니다.
-# 새 모델은 안정성과 출력 형식을 확인한 뒤 이 목록에 명시적으로 추가합니다.
-STABLE_TEXT_MODEL_ALLOWLIST = (
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-2.5-pro",
-)
-MODEL_FALLBACKS = (
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-)
-UNSTABLE_MODEL_MARKERS = (
-    "audio",
-    "embedding",
-    "experimental",
-    "exp-",
-    "image",
-    "imagen",
-    "live",
-    "omni",
-    "preview",
-    "robotics",
-    "speech",
-    "tts",
-    "veo",
-)
+OPENAI_MODEL = "gpt-5.6-luna"
+OPENAI_REASONING_EFFORT = "medium"
+GENERATION_ATTEMPTS = 2
+
+BLOG_POST_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "summary": {"type": "string"},
+        "tags": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 3,
+            "maxItems": 6,
+        },
+        "category": {"type": "string"},
+        "body": {"type": "string"},
+    },
+    "required": ["title", "summary", "tags", "category", "body"],
+    "additionalProperties": False,
+}
 
 MIN_BODY_LENGTH = 3500
 MIN_TAG_COUNT = 3
@@ -140,74 +129,6 @@ def get_recent_posts_info(count=6):
     except (OSError, UnicodeError) as error:
         print(f"⚠️ 최근 포스팅 이력 조회 중 오류: {error}")
         return []
-
-
-def normalize_model_id(model_name):
-    """API 리소스 접두사를 제거한 Gemini 모델 ID를 반환합니다."""
-    if not isinstance(model_name, str):
-        return ""
-    return model_name.strip().removeprefix("models/").lower()
-
-
-def _supports_generate_content(model):
-    actions = getattr(model, "supported_actions", None)
-    if not actions:
-        return False
-    normalized_actions = {
-        re.sub(r"[^a-z]", "", str(action).lower()) for action in actions
-    }
-    return "generatecontent" in normalized_actions
-
-
-def is_safe_text_model(model_name):
-    """모델 ID가 승인된 안정 텍스트 모델인지 확인합니다."""
-    normalized = normalize_model_id(model_name)
-    return normalized in STABLE_TEXT_MODEL_ALLOWLIST and not any(
-        marker in normalized for marker in UNSTABLE_MODEL_MARKERS
-    )
-
-
-def filter_stable_text_models(models):
-    """generateContent를 지원하는 안정 텍스트 모델만 우선순위대로 남깁니다."""
-    available = {
-        normalize_model_id(getattr(model, "name", ""))
-        for model in models
-        if _supports_generate_content(model)
-        and is_safe_text_model(getattr(model, "name", ""))
-    }
-    return [
-        model_name
-        for model_name in STABLE_TEXT_MODEL_ALLOWLIST
-        if model_name in available
-    ]
-
-
-def get_best_model_list(client):
-    """환경변수 우선순위를 적용한 안전한 텍스트 모델 후보를 반환합니다."""
-    configured_model = normalize_model_id(os.environ.get("GEMINI_MODEL", ""))
-
-    try:
-        discovered_models = filter_stable_text_models(client.models.list())
-        candidates = []
-        if configured_model in discovered_models:
-            candidates.append(configured_model)
-        elif configured_model:
-            print(
-                "⚠️ GEMINI_MODEL이 안정 텍스트 모델로 확인되지 않아 무시합니다: "
-                f"{configured_model}"
-            )
-        candidates.extend(discovered_models)
-    except Exception as error:
-        print(f"⚠️ 모델 목록 조회 실패, 안정 모델 목록 사용: {error}")
-        candidates = [configured_model] if is_safe_text_model(configured_model) else []
-        candidates.extend(MODEL_FALLBACKS)
-
-    if not candidates:
-        candidates = list(MODEL_FALLBACKS)
-
-    unique_candidates = list(dict.fromkeys(candidates))
-    print(f"🔍 사용 가능한 안정 텍스트 모델: {unique_candidates}")
-    return unique_candidates
 
 
 def normalize_tags(tags, category):
@@ -379,31 +300,44 @@ def _build_prompt(category, news_context, recent_titles, source_urls):
 
 def generate_blog_post_v2(category, news_list, recent_titles=None):
     """수집한 근거 자료로 품질검사를 통과한 블로그 글을 생성합니다."""
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        raise RuntimeError("GEMINI_API_KEY 환경 변수가 없습니다.")
+        raise RuntimeError("OPENAI_API_KEY 환경 변수가 없습니다.")
 
     source_urls = collector.extract_source_urls(news_list)
     if not source_urls:
         raise ValueError("뉴스와 검색 결과에 유효한 원문 URL이 없습니다.")
 
-    client = genai.Client(api_key=api_key)
-    model_candidates = get_best_model_list(client)
+    client = OpenAI(api_key=api_key)
     prompt = _build_prompt(category, news_list, recent_titles or [], source_urls)
     failures = []
 
-    for model_id in model_candidates:
+    for attempt in range(1, GENERATION_ATTEMPTS + 1):
         try:
-            print(f"🚀 구조화된 콘텐츠 생성 중: {model_id}")
-            response = client.models.generate_content(
-                model=model_id,
-                contents=prompt,
-                config={"response_mime_type": "application/json"},
+            print(
+                f"🚀 구조화된 콘텐츠 생성 중: {OPENAI_MODEL} "
+                f"({attempt}/{GENERATION_ATTEMPTS})"
             )
-            if not response.text:
+            response = client.responses.create(
+                model=OPENAI_MODEL,
+                input=prompt,
+                reasoning={"effort": OPENAI_REASONING_EFFORT},
+                text={
+                    "format": {
+                        "type": "json_schema",
+                        "name": "blog_post",
+                        "strict": True,
+                        "schema": BLOG_POST_SCHEMA,
+                    },
+                    "verbosity": "high",
+                },
+                max_output_tokens=12000,
+                store=False,
+            )
+            if not response.output_text:
                 raise ValueError("모델 응답 본문이 비어 있습니다.")
 
-            parsed = json.loads(response.text.strip())
+            parsed = json.loads(response.output_text.strip())
             title = str(parsed.get("title", "")).strip()
             summary = str(parsed.get("summary", "")).strip()
             generated_category = category
@@ -415,10 +349,12 @@ def generate_blog_post_v2(category, news_list, recent_titles=None):
             print("✨ 콘텐츠 생성, 출처 추가, 품질검사 완료")
             return title, summary, tags, generated_category, body
         except Exception as error:
-            failures.append(f"{model_id}: {error}")
-            print(f"❌ {model_id} 생성 실패: {error}")
+            failures.append(f"시도 {attempt}: {error}")
+            print(f"❌ {OPENAI_MODEL} 생성 실패 ({attempt}회차): {error}")
 
-    raise RuntimeError("모든 안정 모델의 콘텐츠 생성에 실패했습니다: " + " | ".join(failures))
+    raise RuntimeError(
+        f"{OPENAI_MODEL} 콘텐츠 생성에 실패했습니다: " + " | ".join(failures)
+    )
 
 
 def _yaml_string(value):

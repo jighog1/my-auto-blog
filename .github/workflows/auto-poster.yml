@@ -40,8 +40,7 @@ jobs:
 
       - name: Generate validated post
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python bot/main.py
 
       - name: Create or update publishing pull request
@@ -58,7 +57,7 @@ jobs:
             이 PR은 워크플로에서 즉시 병합되며 `main` 배포 워크플로가 GitHub Pages에 반영합니다.
 
             검증 항목:
-            - 안정 Gemini 텍스트 모델 사용
+            - GPT-5.6 Luna 단일 모델 사용
             - 본문 3,500자 이상 및 태그 3개 이상
             - 제목 52자 이하 및 과장 표현 제외
             - 30초 요약, 업무 적용, 한계와 주의점 구조

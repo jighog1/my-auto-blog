@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 from unittest import mock
@@ -6,23 +7,24 @@ import collector
 import main
 
 
-class FakeModel:
-    def __init__(self, name, supported_actions):
-        self.name = name
-        self.supported_actions = supported_actions
+class FakeResponse:
+    def __init__(self, output_text):
+        self.output_text = output_text
 
 
-class FakeModelsApi:
-    def __init__(self, models):
-        self._models = models
+class FakeResponsesApi:
+    def __init__(self, output_text):
+        self.output_text = output_text
+        self.calls = []
 
-    def list(self):
-        return self._models
+    def create(self, **kwargs):
+        self.calls.append(kwargs)
+        return FakeResponse(self.output_text)
 
 
-class FakeClient:
-    def __init__(self, models):
-        self.models = FakeModelsApi(models)
+class FakeOpenAIClient:
+    def __init__(self, output_text):
+        self.responses = FakeResponsesApi(output_text)
 
 
 class QualityPolicyTests(unittest.TestCase):
@@ -34,29 +36,47 @@ class QualityPolicyTests(unittest.TestCase):
         )
         return sections + ("\n\n추가 설명입니다." * 400)
 
-    def test_model_filtering_prefers_compatible_configured_model(self):
-        models = [
-            FakeModel("models/gemini-3.6-flash", ["generateContent"]),
-            FakeModel("models/gemini-2.5-flash", ["generateContent"]),
-            FakeModel("models/gemini-2.5-flash-preview-tts", ["generateContent"]),
-            FakeModel("models/gemini-embedding-2-preview", ["embedContent"]),
-            FakeModel("models/gemini-omni-flash-preview", ["generateContent"]),
-        ]
-        with mock.patch.dict(os.environ, {"GEMINI_MODEL": "gemini-2.5-flash"}):
-            candidates = main.get_best_model_list(FakeClient(models))
-
-        self.assertEqual(candidates[0], "gemini-2.5-flash")
-        self.assertEqual(
-            set(candidates), {"gemini-3.6-flash", "gemini-2.5-flash"}
+    def test_generation_uses_only_luna_with_structured_output(self):
+        payload = json.dumps(
+            {
+                "title": "업무에 적용하는 AI 변화",
+                "summary": "업무 영향을 설명하는 요약입니다.",
+                "tags": ["AI", "업무자동화", "생산성"],
+                "category": "IT/AI/Security",
+                "body": self.structured_body(),
+            },
+            ensure_ascii=False,
         )
+        client = FakeOpenAIClient(payload)
 
-        with mock.patch.dict(
-            os.environ,
-            {"GEMINI_MODEL": "gemini-omni-flash-preview"},
+        with (
+            mock.patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}),
+            mock.patch("main.OpenAI", return_value=client) as openai_client,
         ):
-            fallback_candidates = main.get_best_model_list(FakeClient(models))
-        self.assertEqual(fallback_candidates[0], "gemini-3.6-flash")
-        self.assertNotIn("gemini-omni-flash-preview", fallback_candidates)
+            title, _, _, category, content = main.generate_blog_post_v2(
+                "IT/AI/Security",
+                "뉴스 문맥 https://example.com/source",
+                [],
+            )
+
+        openai_client.assert_called_once_with(api_key="test-key")
+        self.assertEqual(title, "업무에 적용하는 AI 변화")
+        self.assertEqual(category, "IT/AI/Security")
+        self.assertIn("## 참고자료", content)
+        self.assertEqual(len(client.responses.calls), 1)
+        request = client.responses.calls[0]
+        self.assertEqual(request["model"], "gpt-5.6-luna")
+        self.assertEqual(request["reasoning"], {"effort": "medium"})
+        self.assertEqual(request["text"]["format"]["type"], "json_schema")
+
+    def test_generation_requires_openai_api_key(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            with self.assertRaisesRegex(RuntimeError, "OPENAI_API_KEY"):
+                main.generate_blog_post_v2(
+                    "IT/AI/Security",
+                    "뉴스 문맥 https://example.com/source",
+                    [],
+                )
 
     def test_source_url_extraction_normalizes_and_deduplicates(self):
         text = """

@@ -1,6 +1,6 @@
 # AI 브리핑룸
 
-**일하는 사람의 AI 브리핑.** RSS와 웹 검색 결과를 근거로 Gemini가 기술 글을 만들고, 검증된 글만 Astro 블로그에 발행하는 자동화 저장소입니다.
+**일하는 사람의 AI 브리핑.** RSS와 웹 검색 결과를 근거로 GPT-5.6 Luna가 기술 글을 만들고, 검증된 글만 Astro 블로그에 발행하는 자동화 저장소입니다.
 
 웹사이트는 직장인이 AI 흐름을 빠르게 파악하고 업무 적용 아이디어를 얻는 데 초점을 둡니다. 기존 글은 보존하되, 현행 구조화 품질정책 도입 전 콘텐츠에는 재확인 안내를 표시합니다.
 
@@ -9,7 +9,7 @@
 1. GeekNews와 Hacker News RSS를 타임아웃 및 HTTP 상태 검사와 함께 수집합니다.
 2. 여러 최신 후보를 비교해 AI 업무 적용 주제를 우선하고, 개발자·IT 실무 주제를 차순위로 선택합니다. 생활·취미 주제와 최근 발행에 사용한 원문은 제외합니다.
 3. `ddgs` 검색 결과를 보완 자료로 추가하고 HTTP(S) 원문 URL을 중복 제거합니다.
-4. `generateContent`를 지원하는 안정 Gemini 텍스트 모델로 Markdown을 생성합니다.
+4. OpenAI Responses API와 `gpt-5.6-luna`로 구조화된 Markdown 데이터를 생성합니다.
 5. 제목 길이와 과장 표현, 요약, 태그, 본문 길이, 필수 브리핑 섹션, 출처와 허용되지 않은 URL을 검사합니다.
 6. 검증된 원문 URL로 `## 참고자료`를 추가한 뒤 글을 저장합니다.
 7. GitHub Actions가 PR을 만들고 즉시 squash merge하면, 발행 워크플로 성공 이벤트를 받은 배포 워크플로가 최신 `main`을 Pages에 배포합니다.
@@ -18,11 +18,10 @@
 
 ## 환경변수
 
-- `GEMINI_API_KEY` (필수): Google Gemini API 키
-- `GEMINI_MODEL` (선택): 우선 사용할 안정 텍스트 모델. 저장소 Actions 변수 또는 로컬 환경변수로 설정합니다. 호환되지 않으면 자동으로 무시됩니다.
+- `OPENAI_API_KEY` (필수): 결제가 활성화된 OpenAI Platform 프로젝트의 API 키
 - `PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN` (웹 빌드 선택): Cloudflare Web Analytics 사이트 토큰
 
-GitHub 저장소에는 `GEMINI_API_KEY`를 Actions secret으로 등록해야 합니다. 자동 PR 생성과 병합에는 워크플로의 `contents: write`, `pull-requests: write` 권한이 사용됩니다.
+GitHub 저장소에는 `OPENAI_API_KEY`를 Actions secret으로 등록해야 합니다. 모델은 코드에서 `gpt-5.6-luna`로 고정되며 별도의 모델 변수는 사용하지 않습니다. 자동 PR 생성과 병합에는 워크플로의 `contents: write`, `pull-requests: write` 권한이 사용됩니다.
 
 운영 방문 통계를 활성화하려면 Cloudflare Web Analytics에서 `fivejh.com` 사이트를 추가하고, 발급된 사이트 토큰을 GitHub Actions 변수 `CLOUDFLARE_WEB_ANALYTICS_TOKEN`으로 등록합니다. 토큰이 없는 빌드에는 분석 스크립트가 포함되지 않습니다.
 
@@ -47,8 +46,8 @@ npm run build
 
 ## 품질 정책
 
-- Google 모델 목록에서 `generateContent` 지원이 확인된 allowlist 모델만 사용합니다.
-- audio, image, embedding, TTS, live, preview, experimental, Omni 계열은 사용하지 않습니다.
+- OpenAI Responses API에서 `gpt-5.6-luna`만 사용하며 다른 모델로 자동 대체하지 않습니다.
+- 추론 강도는 `medium`으로 고정하고 구조화된 JSON 스키마 출력을 요구합니다.
 - 제목과 요약에 생성 실패 문구가 없어야 하고, 최종 태그는 3개 이상이어야 합니다.
 - 제목은 52자 이하여야 하며 `완벽 분석`, `전면 해부` 같은 과장 표현을 사용할 수 없습니다.
 - 새 글에는 `30초 요약`, `무슨 일인가`, `왜 중요한가`, `업무에 어떻게 쓸까`, `한계와 주의점` 섹션이 있어야 합니다.
