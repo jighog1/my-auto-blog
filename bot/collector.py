@@ -291,7 +291,7 @@ def fetch_rss_news(category, limit=5):
 
 
 def get_formatted_news_context(category, limit=3):
-    """Gemini 프롬프트에 전달할 뉴스 목록을 텍스트로 포맷팅합니다."""
+    """콘텐츠 생성 프롬프트에 전달할 뉴스 목록을 텍스트로 포맷팅합니다."""
     news_list = fetch_rss_news(category, limit)
     if not news_list:
         return "수집된 뉴스가 없습니다."
