@@ -34,13 +34,16 @@ const {
   modDatetime,
   timezone,
   tags,
+  aiGenerated,
+  reviewStatus,
 } = post.data;
 
 const { Content } = await render(post);
 const readingMinutes = getReadingTime(post.body);
 const qualityPolicyApplied =
   pubDatetime.getTime() >= new Date(SITE.qualityPolicySince).getTime();
-const authorLabel = author === "AI Bot" ? "AI 자동 작성" : author;
+const isAIGenerated = aiGenerated || author.startsWith("AI 브리핑룸");
+const authorLabel = isAIGenerated ? "AI 브리핑룸 · AI 보조 작성" : author;
 
 let ogImageUrl: string | undefined;
 let displayImageUrl: string | undefined;
@@ -122,7 +125,12 @@ const nextPost =
             <div
               class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-muted-foreground"
             >
-              <span>{authorLabel}</span>
+              <a
+                href="/about"
+                class="underline-offset-4 hover:text-accent hover:underline"
+              >
+                {authorLabel}
+              </a>
               <span aria-hidden="true">·</span>
               <Datetime {pubDatetime} {modDatetime} {timezone} hideIcon />
               <span aria-hidden="true">·</span>
@@ -140,14 +148,16 @@ const nextPost =
               <strong class="block text-foreground">
                 {
                   qualityPolicyApplied
-                    ? "출처·구조 품질검사 적용"
+                    ? "AI 활용 및 검증 범위"
                     : "품질정책 도입 전 콘텐츠"
                 }
               </strong>
               <span>
                 {
                   qualityPolicyApplied
-                    ? "제공된 원문 URL, 분량, 태그, 금지 표현을 자동 검사한 글입니다."
+                    ? reviewStatus === "human-reviewed"
+                      ? "AI를 보조 도구로 사용하고 사람이 출처와 결론을 검토한 글입니다."
+                      : "AI가 제공된 자료로 초안을 만들고 출처·중복·구조를 자동 검사했습니다. 직접 사용하거나 전문가가 검토했다는 의미는 아닙니다."
                     : "현행 품질정책 적용 전에 작성되었습니다. 중요한 판단에는 참고자료와 최신 정보를 다시 확인해 주세요."
                 }
               </span>
