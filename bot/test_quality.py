@@ -97,7 +97,7 @@ class QualityPolicyTests(unittest.TestCase):
         self.assertEqual(category, "IT/AI/Security")
         self.assertIn("## 참고자료", content)
         request = client.responses.calls[0]
-        self.assertEqual(request["model"], "gpt-5.6-luna")
+        self.assertEqual(request["model"], "gpt-6-luna")
         self.assertEqual(request["reasoning"], {"effort": "medium"})
         self.assertEqual(request["text"]["format"]["type"], "json_schema")
 

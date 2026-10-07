@@ -19,7 +19,7 @@ CATEGORIES = {
     "IT/AI/Security": "긱뉴스 및 깃허브 상위 랭크 기반 최신 기술 동향"
 }
 
-OPENAI_MODEL = "gpt-5.6-luna"
+OPENAI_MODEL = "gpt-6-luna"
 OPENAI_REASONING_EFFORT = "medium"
 GENERATION_ATTEMPTS = 2
 
