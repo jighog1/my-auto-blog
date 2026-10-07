@@ -8,7 +8,7 @@
 2. AI 업무 적용 주제를 먼저, 개발자·IT 실무 주제를 다음으로 평가합니다. 생활·취미 주제와 최근 사용한 원문은 제외합니다.
 3. `ddgs` 검색 결과에서 커뮤니티·재배포 페이지를 제거하고 실제 원문 응답을 읽을 수 있는 자료만 남깁니다.
 4. 서로 다른 도메인의 출처가 두 곳 이상이고, 제품·프로젝트·연구의 읽을 수 있는 직접 출처가 있는 주제만 선택합니다.
-5. OpenAI Responses API와 `gpt-5.6-luna`로 초안을 만들고 출처·중복·구조·표현 품질을 검사합니다.
+5. OpenAI Responses API와 `gpt-6-luna`로 초안을 만들고 출처·중복·구조·표현 품질을 검사합니다.
 6. 검사를 통과한 글만 Markdown으로 저장하고 GitHub Actions가 PR을 생성·병합합니다.
 7. 정기 실행은 월·수·금 UTC 22:00(KST 다음 날 오전 7시)이며, 적합한 주제가 없으면 발행하지 않습니다.
 
@@ -17,6 +17,8 @@
 - `OPENAI_API_KEY`: 콘텐츠 생성에 사용하는 OpenAI API 키
 - `PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN`: 로컬 웹 빌드용 선택 항목
 - GitHub Actions에서는 `OPENAI_API_KEY`를 저장소 Secret으로, Cloudflare 토큰은 `CLOUDFLARE_WEB_ANALYTICS_TOKEN` 저장소 Variable로 등록합니다.
+
+API 키가 속한 OpenAI 프로젝트에 사용 가능한 크레딧이 있어야 합니다. Actions 로그에 `credit_balance_exhausted` 또는 `insufficient_quota`가 나오면 API 결제·크레딧 상태를 확인하세요. 모델 변경이나 ChatGPT 구독만으로 API 크레딧 부족이 해결되지는 않습니다.
 
 ## 로컬 검증
 
